@@ -1,0 +1,24 @@
+{
+  "name": "reconspec",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LLM-powered API security testing tool",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "dev:server": "pnpm --filter server dev",
+    "dev:client": "pnpm --filter client dev",
+    "build": "pnpm --filter shared build && pnpm --filter server build && pnpm --filter client build",
+    "build:server": "pnpm --filter server build",
+    "build:client": "pnpm --filter client build",
+    "clean": "rm -rf node_modules client/node_modules server/node_modules shared/node_modules client/dist server/dist",
+    "typecheck": "pnpm --filter client typecheck && pnpm --filter server typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
