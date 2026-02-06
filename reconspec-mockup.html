@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReconSpec — UI Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0B0D14;
+    --bg-secondary: #131620;
+    --bg-tertiary: #1C1F2E;
+    --bg-elevated: #242838;
+    --border-default: #2A2F42;
+    --border-subtle: #1E2235;
+    --border-focus: #A78BFA;
+    --text-primary: #E8EAF0;
+    --text-secondary: #9399B2;
+    --text-tertiary: #5C6280;
+    --text-inverse: #0B0D14;
+    --brand-default: #A78BFA;
+    --brand-hover: #C4B5FD;
+    --brand-muted: #7C3AED;
+    --brand-bg: rgba(167, 139, 250, 0.10);
+    --brand-bg-hover: rgba(167, 139, 250, 0.18);
+    --success: #4ADE80;
+    --success-bg: rgba(74, 222, 128, 0.10);
+    --warning: #FBBF24;
+    --warning-bg: rgba(251, 191, 36, 0.10);
+    --error: #F87171;
+    --error-bg: rgba(248, 113, 113, 0.10);
+    --info: #60A5FA;
+    --info-bg: rgba(96, 165, 250, 0.10);
+    --method-get: #60A5FA;
+    --method-post: #4ADE80;
+    --method-put: #FBBF24;
+    --method-patch: #C084FC;
+    --method-delete: #F87171;
+    --hover-overlay: rgba(255, 255, 255, 0.04);
+    --active-overlay: rgba(255, 255, 255, 0.06);
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ─── Top Bar ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--brand-default);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-inverse);
+    font-family: var(--font-mono);
+  }
+
+  .logo-text {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-text span {
+    color: var(--brand-default);
+  }
+
+  .topbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-default);
+  }
+
+  .api-title {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .api-title strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
+
+  .btn-primary {
+    background: var(--brand-default);
+    color: var(--text-inverse);
+  }
+  .btn-primary:hover { background: var(--brand-hover); }
+
+  .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+  }
+  .btn-secondary:hover { background: var(--bg-elevated); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .btn-ghost:hover { background: var(--hover-overlay); color: var(--text-primary); }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .btn-icon {
+    padding: 7px;
+    width: 32px;
+    height: 32px;
+    justify-content: center;
+  }
+
+  /* ─── Main Layout ─── */
+  .main-layout {
+    display: flex;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 260px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    padding: 16px 0;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section {
+    padding: 0 12px;
+    margin-bottom: 20px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s ease;
+    text-decoration: none;
+  }
+
+  .sidebar-item:hover {
+    background: var(--hover-overlay);
+    color: var(--text-primary);
+  }
+
+  .sidebar-item.active {
+    background: var(--brand-bg);
+    color: var(--brand-default);
+  }
+
+  .sidebar-item .method-badge-mini {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    min-width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-item .path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 1px 6px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  /* ─── Content Area ─── */
+  .content {
+    flex: 1;
+    padding: 24px 32px;
+    overflow-y: auto;
+    max-width: 960px;
+  }
+
+  /* ─── Summary Card ─── */
+  .summary-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .summary-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .summary-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .summary-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .summary-stats {
+    display: flex;
+    gap: 20px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--brand-default);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .summary-body {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .summary-body p + p { margin-top: 10px; }
+
+  .risk-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .risk-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 20px;
+    background: var(--brand-bg);
+    color: var(--brand-default);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+  }
+
+  .risk-tag .tag-count {
+    background: rgba(167, 139, 250, 0.25);
+    padding: 0 5px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /* ─── Tag Group ─── */
+  .tag-group {
+    margin-bottom: 8px;
+  }
+
+  .tag-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .tag-group-header:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .tag-group-header:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
+
+  .tag-group-chevron {
+    color: var(--text-tertiary);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .tag-group.open .tag-group-chevron {
+    transform: rotate(90deg);
+  }
+
+  .tag-group-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .tag-group-count {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-left: auto;
+  }
+
+  .tag-group-endpoints {
+    padding: 6px 0 6px 12px;
+  }
+
+  /* ─── Endpoint Card ─── */
+  .endpoint-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+  }
+
+  .endpoint-card:hover {
+    border-color: var(--border-default);
+  }
+
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .endpoint-header:hover {
+    background: var(--hover-overlay);
+  }
+
+  .endpoint-header:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: -2px;
+  }
+
+  .method-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    min-width: 52px;
+    text-align: center;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .method-get { background: rgba(96, 165, 250, 0.15); color: var(--method-get); }
+  .method-post { background: rgba(74, 222, 128, 0.15); color: var(--method-post); }
+  .method-put { background: rgba(251, 191, 36, 0.15); color: var(--method-put); }
+  .method-patch { background: rgba(192, 132, 252, 0.15); color: var(--method-patch); }
+  .method-delete { background: rgba(248, 113, 113, 0.15); color: var(--method-delete); }
+
+  .method-get.mini { background: rgba(96, 165, 250, 0.15); color: var(--method-get); }
+  .method-post.mini { background: rgba(74, 222, 128, 0.15); color: var(--method-post); }
+  .method-put.mini { background: rgba(251, 191, 36, 0.15); color: var(--method-put); }
+  .method-delete.mini { background: rgba(248, 113, 113, 0.15); color: var(--method-delete); }
+
+  .endpoint-path {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .endpoint-path .param {
+    color: var(--brand-default);
+  }
+
+  .endpoint-summary-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+  }
+
+  .endpoint-scenario-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--brand-default);
+    background: var(--brand-bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .endpoint-chevron {
+    color: var(--text-tertiary);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+
+  .endpoint-card.open .endpoint-chevron {
+    transform: rotate(90deg);
+  }
+
+  /* ─── Endpoint Expanded Body ─── */
+  .endpoint-body {
+    border-top: 1px solid var(--border-subtle);
+    padding: 16px;
+  }
+
+  .endpoint-details {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+
+  .endpoint-detail-section {
+    flex: 1;
+  }
+
+  .detail-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+  }
+
+  .param-list {
+    list-style: none;
+  }
+
+  .param-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+
+  .param-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--brand-default);
+    font-weight: 500;
+  }
+
+  .param-type {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+  }
+
+  .param-required {
+    font-size: 10px;
+    color: var(--error);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .param-desc {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  /* ─── Security Assessment Section ─── */
+  .security-assessment {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .security-assessment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--brand-bg);
+    border-bottom: 1px solid rgba(167, 139, 250, 0.12);
+  }
+
+  .security-assessment-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-default);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .shield-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .scenario-count-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  /* ─── Attack Scenario ─── */
+  .attack-scenario {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.1s ease;
+  }
+
+  .attack-scenario:last-child {
+    border-bottom: none;
+  }
+
+  .attack-scenario-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .attack-scenario-header:hover {
+    background: var(--hover-overlay);
+  }
+
+  .attack-scenario-header:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: -2px;
+  }
+
+  .scenario-number {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    min-width: 20px;
+    padding-top: 2px;
+  }
+
+  .scenario-content {
+    flex: 1;
+  }
+
+  .scenario-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+
+  .scenario-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--brand-default);
+    background: var(--brand-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  .scenario-params {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .scenario-params code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .scenario-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand-default);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: var(--font-body);
+    margin-top: 6px;
+    transition: color 0.12s ease;
+  }
+
+  .scenario-expand-btn:hover {
+    color: var(--brand-hover);
+  }
+
+  .scenario-expand-btn:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* ─── Expanded Deep Dive ─── */
+  .scenario-deep-dive {
+    padding: 0 16px 16px 48px;
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .deep-dive-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 16px;
+  }
+
+  .deep-dive-section {
+    margin-bottom: 14px;
+  }
+
+  .deep-dive-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .deep-dive-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+
+  .deep-dive-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .deep-dive-steps {
+    list-style: none;
+    counter-reset: steps;
+  }
+
+  .deep-dive-steps li {
+    counter-increment: steps;
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding: 3px 0;
+  }
+
+  .deep-dive-steps li::before {
+    content: counter(steps);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--brand-default);
+    background: var(--brand-bg);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .payload-block {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: auto;
+    position: relative;
+  }
+
+  .payload-block .line-muted {
+    color: var(--text-tertiary);
+  }
+
+  .payload-block .line-highlight {
+    color: var(--warning);
+  }
+
+  .payload-label {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .generate-payload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand-default);
+    background: var(--brand-bg);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.12s ease;
+  }
+
+  .generate-payload-btn:hover {
+    background: var(--brand-bg-hover);
+    border-color: rgba(167, 139, 250, 0.35);
+  }
+
+  .generate-payload-btn:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
+
+  /* ─── Add Scenario Button ─── */
+  .add-scenario-row {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .add-scenario-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: var(--font-body);
+    transition: color 0.12s ease;
+  }
+
+  .add-scenario-btn:hover {
+    color: var(--brand-default);
+  }
+
+  .add-scenario-btn:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* ─── Loading Skeleton ─── */
+  .loading-pulse {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    color: var(--text-tertiary);
+    font-size: 13px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-default);
+    border-top-color: var(--brand-default);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─── Import State (shown when no spec is loaded) ─── */
+  .import-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    text-align: center;
+  }
+
+  .import-dropzone {
+    width: 100%;
+    max-width: 480px;
+    border: 2px dashed var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 48px 32px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .import-dropzone:hover,
+  .import-dropzone.drag-over {
+    border-color: var(--brand-default);
+    background: var(--brand-bg);
+  }
+
+  .import-dropzone:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 4px;
+  }
+
+  .import-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    background: var(--brand-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .import-heading {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .import-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .import-formats {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .import-formats code {
+    font-family: var(--font-mono);
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  /* ─── Settings Panel (BYOK) ─── */
+  .settings-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 380px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-subtle);
+    z-index: 200;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+    animation: slideInRight 0.2s ease;
+  }
+
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .settings-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .form-select,
+  .form-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: border-color 0.12s ease;
+    appearance: none;
+  }
+
+  .form-select:focus,
+  .form-input:focus {
+    outline: none;
+    border-color: var(--brand-default);
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.15);
+  }
+
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239399B2' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+
+  .form-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    margin-top: 12px;
+  }
+
+  .connection-status.success {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ─── Screen reader only ─── */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* ─── Tab indicator for views ─── */
+  .view-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-tertiary);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    margin-left: 16px;
+  }
+
+  .view-tab {
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.12s ease;
+  }
+
+  .view-tab:hover {
+    color: var(--text-secondary);
+  }
+
+  .view-tab.active {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+
+  .view-tab:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 1px;
+  }
+
+  /* ─── State indicators ─── */
+  .analysis-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--success);
+    background: var(--success-bg);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .analysis-status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  /* ─── Export Bar ─── */
+  .export-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+  }
+
+  .export-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .export-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+</style>
+</head>
+<body>
+
+<!-- ════════ TOP BAR ════════ -->
+<header class="topbar" role="banner">
+  <div class="topbar-left">
+    <a href="#" class="logo" aria-label="ReconSpec home">
+      <div class="logo-icon" aria-hidden="true">R</div>
+      <div class="logo-text">Recon<span>Spec</span></div>
+    </a>
+    <div class="topbar-divider" aria-hidden="true"></div>
+    <div class="api-title"><strong>Petstore API</strong> &nbsp;v3.1.0</div>
+    <div class="analysis-status"><span class="dot" aria-hidden="true"></span> Analysis complete</div>
+  </div>
+  <div class="topbar-right">
+    <div class="view-tabs" role="tablist" aria-label="View options">
+      <button class="view-tab active" role="tab" aria-selected="true">Endpoints</button>
+      <button class="view-tab" role="tab" aria-selected="false">Summary</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" aria-label="Import new spec">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import
+    </button>
+    <button class="btn btn-ghost btn-icon" aria-label="Settings and provider configuration">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="main-layout">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <nav class="sidebar" role="navigation" aria-label="API endpoints">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Endpoints</div>
+
+      <div style="margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-tertiary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">
+          Pets
+        </div>
+        <a href="#" class="sidebar-item active">
+          <span class="method-badge-mini method-get" style="background: rgba(96,165,250,0.15); color: var(--method-get);">GET</span>
+          <span class="path">/pets</span>
+          <span class="sidebar-count">4</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-post" style="background: rgba(74,222,128,0.15); color: var(--method-post);">POST</span>
+          <span class="path">/pets</span>
+          <span class="sidebar-count">6</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-get" style="background: rgba(96,165,250,0.15); color: var(--method-get);">GET</span>
+          <span class="path">/pets/{petId}</span>
+          <span class="sidebar-count">3</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-put" style="background: rgba(251,191,36,0.15); color: var(--method-put);">PUT</span>
+          <span class="path">/pets/{petId}</span>
+          <span class="sidebar-count">5</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-delete" style="background: rgba(248,113,113,0.15); color: var(--method-delete);">DEL</span>
+          <span class="path">/pets/{petId}</span>
+          <span class="sidebar-count">3</span>
+        </a>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-tertiary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">
+          Users
+        </div>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-post" style="background: rgba(74,222,128,0.15); color: var(--method-post);">POST</span>
+          <span class="path">/users</span>
+          <span class="sidebar-count">7</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-post" style="background: rgba(74,222,128,0.15); color: var(--method-post);">POST</span>
+          <span class="path">/users/login</span>
+          <span class="sidebar-count">5</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-get" style="background: rgba(96,165,250,0.15); color: var(--method-get);">GET</span>
+          <span class="path">/users/{username}</span>
+          <span class="sidebar-count">4</span>
+        </a>
+      </div>
+
+      <div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-tertiary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">
+          Orders
+        </div>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-post" style="background: rgba(74,222,128,0.15); color: var(--method-post);">POST</span>
+          <span class="path">/store/order</span>
+          <span class="sidebar-count">5</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="method-badge-mini method-get" style="background: rgba(96,165,250,0.15); color: var(--method-get);">GET</span>
+          <span class="path">/store/order/{orderId}</span>
+          <span class="sidebar-count">3</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ════════ MAIN CONTENT ════════ -->
+  <main class="content" role="main" aria-label="API security assessment">
+
+    <!-- ─── Summary Card ─── -->
+    <section class="summary-card" aria-label="API security summary">
+      <div class="summary-header">
+        <div>
+          <h1 class="summary-title">Petstore API — Security Assessment</h1>
+          <p class="summary-subtitle">OpenAPI 3.1.0 — 10 endpoints across 3 tag groups</p>
+        </div>
+        <div class="summary-stats">
+          <div class="stat">
+            <div class="stat-value">45</div>
+            <div class="stat-label">Scenarios</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">10</div>
+            <div class="stat-label">Endpoints</div>
+          </div>
+        </div>
+      </div>
+      <div class="summary-body">
+        <p>This API manages pet inventory, user accounts, and store orders. Authentication relies on API key and OAuth2 flows. The analysis identified several areas of concern, primarily around the user registration and authentication endpoints, which accept unvalidated input and lack rate limiting indicators in the spec. The pet management endpoints expose file upload functionality that warrants testing for injection and storage-based attacks.</p>
+        <p>Object-level authorization testing is recommended across all endpoints using path parameters, particularly <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg-tertiary); padding: 2px 6px; border-radius: 3px;">{petId}</code>, <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg-tertiary); padding: 2px 6px; border-radius: 3px;">{username}</code>, and <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg-tertiary); padding: 2px 6px; border-radius: 3px;">{orderId}</code>.</p>
+      </div>
+      <div class="risk-tags" aria-label="Key risk areas identified">
+        <span class="risk-tag">API1 — Broken Object Level Auth <span class="tag-count">8</span></span>
+        <span class="risk-tag">API2 — Broken Authentication <span class="tag-count">5</span></span>
+        <span class="risk-tag">API3 — Object Property Level Auth <span class="tag-count">6</span></span>
+        <span class="risk-tag">API8 — Security Misconfiguration <span class="tag-count">4</span></span>
+      </div>
+    </section>
+
+    <!-- ─── Export / Action Bar ─── -->
+    <div class="export-bar">
+      <div class="export-bar-left">
+        <span style="font-size: 13px; color: var(--text-secondary);">Test Plan</span>
+        <span style="font-size: 11px; color: var(--text-tertiary);">Last analyzed 2 min ago</span>
+      </div>
+      <div class="export-bar-right">
+        <button class="btn btn-secondary btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export JSON
+        </button>
+        <button class="btn btn-primary btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          Re-analyze
+        </button>
+      </div>
+    </div>
+
+    <!-- ════════ ENDPOINT: POST /pets (expanded, showing full flow) ════════ -->
+    <div class="tag-group open" role="region" aria-label="Pets endpoints">
+      <div class="tag-group-header" role="button" tabindex="0" aria-expanded="true">
+        <svg class="tag-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        <span class="tag-group-name">Pets</span>
+        <span class="tag-group-count">5 endpoints — 21 attack scenarios</span>
+      </div>
+
+      <div class="tag-group-endpoints">
+
+        <!-- Collapsed endpoint -->
+        <div class="endpoint-card">
+          <div class="endpoint-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/pets</span>
+            <span class="endpoint-summary-text">List all pets</span>
+            <span class="endpoint-scenario-count">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              4
+            </span>
+            <svg class="endpoint-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <!-- ═══ EXPANDED ENDPOINT: POST /pets ═══ -->
+        <div class="endpoint-card open">
+          <div class="endpoint-header" role="button" tabindex="0" aria-expanded="true">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/pets</span>
+            <span class="endpoint-summary-text">Create a pet</span>
+            <span class="endpoint-scenario-count">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              6
+            </span>
+            <svg class="endpoint-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+
+          <div class="endpoint-body">
+            <!-- Endpoint params -->
+            <div class="endpoint-details">
+              <div class="endpoint-detail-section">
+                <div class="detail-heading">Request Body (application/json)</div>
+                <ul class="param-list">
+                  <li class="param-item">
+                    <span class="param-name">name</span>
+                    <span class="param-type">string</span>
+                    <span class="param-required">required</span>
+                  </li>
+                  <li class="param-item">
+                    <span class="param-name">tag</span>
+                    <span class="param-type">string</span>
+                  </li>
+                  <li class="param-item">
+                    <span class="param-name">photoUrl</span>
+                    <span class="param-type">string</span>
+                  </li>
+                  <li class="param-item">
+                    <span class="param-name">status</span>
+                    <span class="param-type">enum</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="endpoint-detail-section">
+                <div class="detail-heading">Auth</div>
+                <p style="font-size: 13px; color: var(--text-secondary);">OAuth2 (write:pets)</p>
+                <div class="detail-heading" style="margin-top: 12px;">Responses</div>
+                <p style="font-size: 13px; color: var(--text-secondary);">
+                  <code style="font-family: var(--font-mono); font-size: 12px; color: var(--success);">200</code> Pet created &nbsp;
+                  <code style="font-family: var(--font-mono); font-size: 12px; color: var(--error);">405</code> Invalid input
+                </p>
+              </div>
+            </div>
+
+            <!-- Security Assessment Section -->
+            <div class="security-assessment" role="region" aria-label="Security assessment for POST /pets">
+              <div class="security-assessment-header">
+                <div class="security-assessment-title">
+                  <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Security Assessment
+                </div>
+                <span class="scenario-count-label">6 attack scenarios</span>
+              </div>
+
+              <!-- Scenario 1: Collapsed -->
+              <div class="attack-scenario">
+                <div class="attack-scenario-header" role="button" tabindex="0" aria-expanded="false">
+                  <span class="scenario-number">1</span>
+                  <div class="scenario-content">
+                    <div class="scenario-name">Mass Assignment via Unprotected Properties</div>
+                    <div>
+                      <span class="scenario-category">API3 Object Property Auth</span>
+                      <span class="scenario-params">Params: <code>status</code> <code>photoUrl</code></span>
+                    </div>
+                    <button class="scenario-expand-btn" aria-label="Show detailed testing steps for mass assignment">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Deep Dive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scenario 2: EXPANDED with Deep Dive -->
+              <div class="attack-scenario">
+                <div class="attack-scenario-header" role="button" tabindex="0" aria-expanded="true" style="background: var(--hover-overlay);">
+                  <span class="scenario-number">2</span>
+                  <div class="scenario-content">
+                    <div class="scenario-name">Injection via Name and Tag Fields</div>
+                    <div>
+                      <span class="scenario-category">API8 Security Misconfiguration</span>
+                      <span class="scenario-params">Params: <code>name</code> <code>tag</code></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="scenario-deep-dive">
+                  <div class="deep-dive-card">
+                    <div class="deep-dive-section">
+                      <div class="deep-dive-heading">Overview</div>
+                      <p class="deep-dive-text">The <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg-primary); padding: 1px 5px; border-radius: 3px;">name</code> and <code style="font-family: var(--font-mono); font-size: 12px; background: var(--bg-primary); padding: 1px 5px; border-radius: 3px;">tag</code> fields accept string input that may not be sanitized before storage or rendering. Test for SQL injection, NoSQL injection, and stored XSS depending on the backend technology.</p>
+                    </div>
+
+                    <div class="deep-dive-section">
+                      <div class="deep-dive-heading">Testing Steps</div>
+                      <ol class="deep-dive-steps">
+                        <li>Send a POST request with SQL injection payloads in the <code style="font-family: var(--font-mono); font-size: 11px; background: var(--bg-primary); padding: 1px 4px; border-radius: 3px;">name</code> field. Observe the response for error messages, time delays, or unexpected behavior that indicates query manipulation.</li>
+                        <li>Repeat with NoSQL payloads if the API appears to use a document database. Watch for operator injection via JSON structure manipulation.</li>
+                        <li>Submit XSS payloads and then retrieve the created resource via GET /pets. Check whether the payload is stored and rendered unescaped.</li>
+                        <li>Test with oversized strings (e.g., 10,000+ characters) to check for buffer handling issues or missing length validation.</li>
+                      </ol>
+                    </div>
+
+                    <div class="deep-dive-section">
+                      <div class="deep-dive-heading">Sample Payload</div>
+                      <div class="payload-block">
+                        <span class="payload-label">JSON</span>
+<span class="line-muted">{</span>
+  <span class="line-muted">"name":</span> <span class="line-highlight">"'; DROP TABLE pets; --"</span>,
+  <span class="line-muted">"tag":</span> <span class="line-highlight">"&lt;img src=x onerror=alert(1)&gt;"</span>,
+  <span class="line-muted">"status": "available"</span>
+<span class="line-muted">}</span>
+                      </div>
+                      <button class="generate-payload-btn" aria-label="Generate more injection payloads for this endpoint">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                        Generate More Payloads
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scenario 3 -->
+              <div class="attack-scenario">
+                <div class="attack-scenario-header" role="button" tabindex="0" aria-expanded="false">
+                  <span class="scenario-number">3</span>
+                  <div class="scenario-content">
+                    <div class="scenario-name">SSRF via photoUrl Parameter</div>
+                    <div>
+                      <span class="scenario-category">API8 Security Misconfiguration</span>
+                      <span class="scenario-params">Params: <code>photoUrl</code></span>
+                    </div>
+                    <button class="scenario-expand-btn" aria-label="Show detailed testing steps for SSRF">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Deep Dive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scenario 4 -->
+              <div class="attack-scenario">
+                <div class="attack-scenario-header" role="button" tabindex="0" aria-expanded="false">
+                  <span class="scenario-number">4</span>
+                  <div class="scenario-content">
+                    <div class="scenario-name">Broken Function Level Authorization</div>
+                    <div>
+                      <span class="scenario-category">API1 Broken Object Auth</span>
+                    </div>
+                    <button class="scenario-expand-btn" aria-label="Show detailed testing steps for authorization bypass">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Deep Dive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scenario 5 -->
+              <div class="attack-scenario">
+                <div class="attack-scenario-header" role="button" tabindex="0" aria-expanded="false">
+                  <span class="scenario-number">5</span>
+                  <div class="scenario-content">
+                    <div class="scenario-name">Resource Exhaustion via Bulk Creation</div>
+                    <div>
+                      <span class="scenario-category">API4 Unrestricted Resource</span>
+                    </div>
+                    <button class="scenario-expand-btn" aria-label="Show detailed testing steps for resource exhaustion">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Deep Dive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scenario 6 -->
+              <div class="attack-scenario">
+                <div class="attack-scenario-header" role="button" tabindex="0" aria-expanded="false">
+                  <span class="scenario-number">6</span>
+                  <div class="scenario-content">
+                    <div class="scenario-name">Enum Bypass on Status Field</div>
+                    <div>
+                      <span class="scenario-category">API8 Security Misconfiguration</span>
+                      <span class="scenario-params">Params: <code>status</code></span>
+                    </div>
+                    <button class="scenario-expand-btn" aria-label="Show detailed testing steps for enum bypass">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Deep Dive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add custom scenario -->
+              <div class="add-scenario-row">
+                <button class="add-scenario-btn" aria-label="Add a custom attack scenario">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Custom Scenario
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Another collapsed endpoint -->
+        <div class="endpoint-card">
+          <div class="endpoint-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/pets/<span class="param">{petId}</span></span>
+            <span class="endpoint-summary-text">Get pet by ID</span>
+            <span class="endpoint-scenario-count">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              3
+            </span>
+            <svg class="endpoint-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="method-badge method-put">PUT</span>
+            <span class="endpoint-path">/pets/<span class="param">{petId}</span></span>
+            <span class="endpoint-summary-text">Update a pet</span>
+            <span class="endpoint-scenario-count">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              5
+            </span>
+            <svg class="endpoint-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="method-badge method-delete">DELETE</span>
+            <span class="endpoint-path">/pets/<span class="param">{petId}</span></span>
+            <span class="endpoint-summary-text">Delete a pet</span>
+            <span class="endpoint-scenario-count">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              3
+            </span>
+            <svg class="endpoint-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users group (collapsed) -->
+    <div class="tag-group">
+      <div class="tag-group-header" role="button" tabindex="0" aria-expanded="false">
+        <svg class="tag-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        <span class="tag-group-name">Users</span>
+        <span class="tag-group-count">3 endpoints — 16 attack scenarios</span>
+      </div>
+    </div>
+
+    <!-- Orders group (collapsed) -->
+    <div class="tag-group">
+      <div class="tag-group-header" role="button" tabindex="0" aria-expanded="false">
+        <svg class="tag-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        <span class="tag-group-name">Orders</span>
+        <span class="tag-group-count">2 endpoints — 8 attack scenarios</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ════════ SETTINGS PANEL (slide-in) ════════ -->
+  <aside class="settings-overlay" role="dialog" aria-label="Provider settings">
+    <div class="settings-header">
+      <h2 class="settings-title">Provider Settings</h2>
+      <button class="btn btn-ghost btn-icon" aria-label="Close settings panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="provider-select">AI Provider</label>
+      <select class="form-select" id="provider-select">
+        <option>Anthropic</option>
+        <option>OpenAI</option>
+        <option>xAI</option>
+        <option>DeepSeek</option>
+        <option>Hugging Face</option>
+        <option>OpenRouter</option>
+        <option>Custom Endpoint</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="model-select">Model</label>
+      <select class="form-select" id="model-select">
+        <option>claude-sonnet-4-5-20250514</option>
+        <option>claude-opus-4-0-20250514</option>
+        <option>claude-haiku-4-5-20250514</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="api-key-input">API Key</label>
+      <input class="form-input" id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" />
+      <p class="form-hint">Your key is stored in memory only and never persisted to disk.</p>
+    </div>
+
+    <button class="btn btn-secondary" style="width: 100%; justify-content: center;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Test Connection
+    </button>
+
+    <div class="connection-status success" role="status">
+      <span class="status-dot" aria-hidden="true"></span>
+      Connected — claude-sonnet-4-5-20250514
+    </div>
+  </aside>
+
+</div>
+
+</body>
+</html>
