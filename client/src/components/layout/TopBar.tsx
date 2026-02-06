@@ -1,4 +1,7 @@
 import { useSpec } from "../../context/SpecContext.js";
+import { getProviderStatus } from "../../services/api.js";
+import { useEffect, useState } from "react";
+import type { ProviderStatus } from "@reconspec/shared";
 
 interface TopBarProps {
   onImportClick: () => void;
@@ -6,6 +9,16 @@ interface TopBarProps {
 
 export function TopBar({ onImportClick }: TopBarProps): JSX.Element {
   const { parsedSpec, clearSpec } = useSpec();
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus | null>(null);
+
+  useEffect(() => {
+    getProviderStatus()
+      .then(setProviderStatus)
+      .catch(() => {
+        // If fetching fails, just show as not configured
+        setProviderStatus({ configured: false });
+      });
+  }, []);
 
   return (
     <header className="topbar" role="banner">
@@ -51,6 +64,44 @@ export function TopBar({ onImportClick }: TopBarProps): JSX.Element {
               />
               Not analyzed
             </div>
+            {/* Phase 2: Provider status indicator */}
+            {providerStatus && (
+              <div
+                className="provider-status"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  color: providerStatus.configured
+                    ? "var(--success)"
+                    : "var(--text-tertiary)",
+                  background: providerStatus.configured
+                    ? "var(--success-bg)"
+                    : "var(--bg-tertiary)",
+                  padding: "4px 10px",
+                  borderRadius: "20px",
+                  marginLeft: "8px",
+                }}
+              >
+                <span
+                  className="dot"
+                  aria-hidden="true"
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: providerStatus.configured
+                      ? "var(--success)"
+                      : "var(--text-tertiary)",
+                  }}
+                />
+                {providerStatus.configured
+                  ? `${providerStatus.provider === "anthropic" ? "Anthropic" : providerStatus.provider === "openai" ? "OpenAI" : providerStatus.provider} — ${providerStatus.model}`
+                  : "No provider"}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -79,25 +130,6 @@ export function TopBar({ onImportClick }: TopBarProps): JSX.Element {
             Import
           </button>
         )}
-        {/* Phase 2: Settings button - disabled for now */}
-        <button
-          className="btn btn-ghost btn-icon"
-          disabled
-          aria-label="Settings (coming in Phase 2)"
-          style={{ opacity: 0.5, cursor: "not-allowed" }}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-        </button>
       </div>
     </header>
   );

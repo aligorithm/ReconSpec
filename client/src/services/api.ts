@@ -1,4 +1,4 @@
-import type { ParsedSpec } from "@reconspec/shared";
+import type { ParsedSpec, ProviderStatus } from "@reconspec/shared";
 
 const API_BASE_URL = "/api";
 
@@ -49,3 +49,15 @@ export async function parseSpec(
 
   return (await response.json()) as ParsedSpec;
 }
+
+/**
+ * Get the current provider status
+ */
+export async function getProviderStatus(): Promise<ProviderStatus> {
+  const response = await fetch(`${API_BASE_URL}/provider/status`);
+  if (!response.ok) {
+    throw new Error(`Failed to get provider status: ${response.statusText}`);
+  }
+  return (await response.json()) as ProviderStatus;
+}
+
