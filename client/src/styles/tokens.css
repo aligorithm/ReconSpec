@@ -1,0 +1,104 @@
+/**
+ * Design Tokens for ReconSpec
+ * Single source of truth for colors, typography, and spacing
+ */
+
+:root {
+  /* Colors - Backgrounds */
+  --bg-primary: #0B0D14;
+  --bg-secondary: #131620;
+  --bg-tertiary: #1C1F2E;
+  --bg-elevated: #242838;
+
+  /* Colors - Borders */
+  --border-default: #2A2F42;
+  --border-subtle: #1E2235;
+  --border-focus: #A78BFA;
+
+  /* Colors - Text */
+  --text-primary: #E8EAF0;
+  --text-secondary: #9399B2;
+  --text-tertiary: #8A92B0;
+  --text-inverse: #0B0D14;
+
+  /* Colors - Brand */
+  --brand-default: #A78BFA;
+  --brand-hover: #C4B5FD;
+  --brand-muted: #7C3AED;
+  --brand-bg: rgba(167, 139, 250, 0.1);
+  --brand-bg-hover: rgba(167, 139, 250, 0.18);
+
+  /* Colors - Status */
+  --success: #4ADE80;
+  --success-bg: rgba(74, 222, 128, 0.1);
+  --warning: #FBBF24;
+  --warning-bg: rgba(251, 191, 36, 0.1);
+  --error: #F87171;
+  --error-bg: rgba(248, 113, 113, 0.1);
+  --info: #60A5FA;
+  --info-bg: rgba(96, 165, 250, 0.1);
+
+  /* Colors - HTTP Methods */
+  --method-get: #60A5FA;
+  --method-post: #4ADE80;
+  --method-put: #FBBF24;
+  --method-patch: #C084FC;
+  --method-delete: #F87171;
+
+  /* Overlays */
+  --hover-overlay: rgba(255, 255, 255, 0.04);
+  --active-overlay: rgba(255, 255, 255, 0.06);
+
+  /* Typography */
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Transitions */
+  --transition-fast: 0.12s ease;
+  --transition-normal: 0.15s ease;
+  --transition-slow: 0.2s ease;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
