@@ -27,11 +27,56 @@ let currentAnalysis: {
 };
 
 /**
+ * Recursively sanitize all string values in an object to prevent XSS
+ * This ensures that any user-controlled content (descriptions, summaries, payloads, etc.)
+ * is HTML-escaped before being sent to the frontend
+ */
+function deepSanitize(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Handle strings - escape HTML entities
+  if (typeof obj === 'string') {
+    return obj
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  // Handle arrays
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepSanitize(item));
+  }
+
+  // Handle objects - recursively sanitize all properties
+  if (typeof obj === 'object') {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      sanitized[key] = deepSanitize(value);
+    }
+    return sanitized;
+  }
+
+  // Return other primitives (numbers, booleans) as-is
+  return obj;
+}
+
+/**
  * Helper to send SSE event
+ * Sanitizes event names and all data content to prevent XSS injection
  */
 function sendSSE(res: Response, event: string, data: any) {
-  res.write(`event: ${event}\n`);
-  res.write(`data: ${JSON.stringify(data)}\n\n`);
+  // SSE event names should only contain safe characters (alphanumeric, dash, underscore, dot)
+  const sanitizedEvent = event.replace(/[^a-zA-Z0-9_.-]/g, '');
+
+  // Deep sanitize all data to prevent XSS in string content
+  const sanitizedData = deepSanitize(data);
+
+  res.write(`event: ${sanitizedEvent}\n`);
+  res.write(`data: ${JSON.stringify(sanitizedData)}\n\n`);
 }
 
 /**

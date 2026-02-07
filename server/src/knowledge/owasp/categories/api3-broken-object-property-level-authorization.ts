@@ -15,6 +15,9 @@ export const API3: OWASPCategory = {
     "Endpoints accepting user role or permission fields in request body",
     "Create/update operations with objects containing privileged fields",
     "Endpoints with status or tier fields that control access levels",
+    "Request body referencing a schema ($ref) but exposing only subset of properties - hidden properties may be testable for mass assignment",
+    "Mass assignment via hidden properties: POST /users only exposes {name, email} but User schema defines {role, isAdmin, balance}",
+    "Schema references with hidden sensitive properties like tier, subscriptionLevel, verified, disabled, quota",
   ],
   commonPatterns: [
     "POST /users or PUT /users/{id} with role field allowing privilege escalation",
@@ -22,5 +25,7 @@ export const API3: OWASPCategory = {
     "PUT /orders/{orderId} with status field allowing unauthorized state changes",
     "POST /accounts with accountType field allowing tier upgrades",
     "PATCH /profiles with verified: true field allowing self-verification",
+    "Mass assignment via schema gaps: POST /users accepts {name, email} but schema allows {role, isAdmin, subscriptionTier, balance}",
+    "Hidden property exploitation: PATCH /profile shows {displayName} but allSchemaProperties includes {emailVerified, isPremium, accountStatus}",
   ],
 };

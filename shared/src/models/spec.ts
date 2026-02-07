@@ -1,4 +1,16 @@
 import type { EndpointDetail } from "./endpoint.js";
+import type { PropertyDetail } from "./parameter.js";
+
+/**
+ * Schema definition from components/schemas
+ */
+export interface SchemaDefinition {
+  name: string;
+  properties: PropertyDetail[];
+  required: string[];
+  description: string | null;
+  rawSchema: Record<string, unknown>;
+}
 
 /**
  * Parsed OpenAPI specification
@@ -12,6 +24,7 @@ export interface ParsedSpec {
   servers: ServerInfo[];
   auth: AuthScheme[];
   tagGroups: TagGroup[];
+  schemas: SchemaDefinition[];  // Reusable schema definitions
 }
 
 export interface ServerInfo {

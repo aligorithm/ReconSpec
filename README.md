@@ -50,18 +50,22 @@ Supported providers:
 - `anthropic` - Anthropic (Claude Sonnet, Claude Opus)
 - Custom endpoints via `LLM_BASE_URL`
 
-4. Start development servers:
-```bash
-# Terminal 1: Backend server
-cd server
-pnpm run dev
+4. Start the development servers:
 
-# Terminal 2: Frontend
-cd client
-pnpm run dev
+```bash
+# Option 1: Run both server and client together (recommended)
+pnpm dev
+
+# Option 2: Run only the server
+pnpm dev:server
+
+# Option 3: Run only the client
+pnpm dev:client
 ```
 
 5. Open http://localhost:5173 in your browser
+
+The server runs on port 3001 and the client on port 5173.
 
 ## Usage
 

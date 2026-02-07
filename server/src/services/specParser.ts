@@ -13,6 +13,7 @@ import type {
   PropertyDetail,
   ResponseDetail,
   SecurityRequirement,
+  SchemaDefinition,
 } from "@reconspec/shared";
 
 // Initialize DOMPurify with jsdom
@@ -123,6 +124,35 @@ function extractProperties(
 }
 
 /**
+ * Extract schema definitions from components/schemas BEFORE $ref resolution
+ * This must be called on the raw spec before $RefParser.validate()
+ */
+function extractSchemaDefinitions(spec: any): SchemaDefinition[] {
+  const schemas: SchemaDefinition[] = [];
+  const componentsSchemas = spec.components?.schemas;
+
+  if (!componentsSchemas || typeof componentsSchemas !== "object") {
+    return schemas;
+  }
+
+  for (const [name, schema] of Object.entries(componentsSchemas)) {
+    const s = schema as any;
+    const properties = extractProperties(s, s.required || []);
+    const required = s.required || [];
+
+    schemas.push({
+      name,
+      properties,
+      required,
+      description: sanitizeText(s.description),
+      rawSchema: s,
+    });
+  }
+
+  return schemas;
+}
+
+/**
  * Parse OpenAPI spec and normalize to ParsedSpec
  */
 export async function parseSpec(
@@ -148,6 +178,16 @@ export async function parseSpec(
   // Convert version to string if it's a number
   if (spec.info?.version && typeof spec.info.version === "number") {
     spec.info.version = String(spec.info.version);
+  }
+
+  // CRITICAL: Extract schema definitions BEFORE $RefParser.validate() resolves $refs
+  // This must happen before validation or we lose the original schema definitions
+  const schemas = extractSchemaDefinitions(spec);
+
+  // Build a map for quick schema lookup by name
+  const schemaMap = new Map<string, SchemaDefinition>();
+  for (const schema of schemas) {
+    schemaMap.set(schema.name, schema);
   }
 
   // Validate OpenAPI structure and resolve $ref
@@ -254,11 +294,31 @@ export async function parseSpec(
 
         let schema = content?.schema || body.content?.[contentType]?.schema;
 
+        // Track schema reference ($ref) if present
+        let schemaRef: string | null = null;
+        let allSchemaProperties: PropertyDetail[] | null = null;
+
+        if (schema?.$ref) {
+          schemaRef = schema.$ref;
+
+          // Extract schema name from $ref (e.g., "#/components/schemas/User" -> "User")
+          const refParts = schema.$ref.split("/");
+          const schemaName = refParts[refParts.length - 1];
+
+          // Look up the full schema definition from our extracted schemas
+          const schemaDef = schemaMap.get(schemaName);
+          if (schemaDef) {
+            allSchemaProperties = schemaDef.properties;
+          }
+        }
+
         requestBody = {
           required: body.required ?? false,
           contentType,
           properties: schema ? extractProperties(schema) : [],
           rawSchema: schema || null,
+          schemaRef,
+          allSchemaProperties,
         };
       }
 
@@ -346,5 +406,6 @@ export async function parseSpec(
     servers,
     auth: authSchemes,
     tagGroups,
+    schemas,
   };
 }

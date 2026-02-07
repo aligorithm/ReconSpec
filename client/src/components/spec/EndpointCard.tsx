@@ -15,11 +15,9 @@ export function EndpointCard({ endpoint }: EndpointCardProps): JSX.Element {
 
   const vulnCount = endpoint.assessment?.vulnerabilities.length ?? 0;
 
-  // Highlight path parameters
-  const pathWithParams = endpoint.path.replace(
-    /\{([^}]+)\}/g,
-    '<span class="param">{$1}</span>'
-  );
+  // Parse path into segments to safely render parameter highlighting
+  // This prevents XSS by not using dangerouslySetInnerHTML
+  const pathSegments = endpoint.path.split(/(\{[^}]+\})/g).filter(Boolean);
 
   return (
     <div
@@ -40,10 +38,16 @@ export function EndpointCard({ endpoint }: EndpointCardProps): JSX.Element {
         }}
       >
         <MethodBadge method={endpoint.method} />
-        <span
-          className="endpoint-path"
-          dangerouslySetInnerHTML={{ __html: pathWithParams }}
-        />
+        <span className="endpoint-path">
+          {pathSegments.map((segment, index) => {
+            const isParam = segment.startsWith('{') && segment.endsWith('}');
+            return isParam ? (
+              <span key={index} className="param">{segment}</span>
+            ) : (
+              <span key={index}>{segment}</span>
+            );
+          })}
+        </span>
         {endpoint.summary && (
           <span className="endpoint-summary-text">{endpoint.summary}</span>
         )}

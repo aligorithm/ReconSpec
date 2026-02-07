@@ -9,6 +9,44 @@ import { getKnowledgeBaseText } from "../knowledge/owasp/index.js";
 import { getCategoryDocs } from "../knowledge/owasp/docsLoader.js";
 
 /**
+ * Sensitive property names that commonly indicate mass assignment vectors
+ * These are properties that could allow privilege escalation or unauthorized access
+ */
+const SENSITIVE_PROPERTIES = [
+  "role",
+  "roles",
+  "isAdmin",
+  "admin",
+  "isSuperUser",
+  "superuser",
+  "isOwner",
+  "owner",
+  "verified",
+  "isVerified",
+  "emailVerified",
+  "tier",
+  "subscriptionTier",
+  "plan",
+  "subscription",
+  "balance",
+  "credits",
+  "status",
+  "accountStatus",
+  "enabled",
+  "disabled",
+  "permissions",
+  "scopes",
+  "groups",
+  "teams",
+  "organizationId",
+  "orgId",
+  "companyId",
+  "quota",
+  "limit",
+  "rateLimit",
+] as const;
+
+/**
  * Build the system prompt for Phase A analysis
  */
 export function buildSystemPrompt(): string {
@@ -97,15 +135,61 @@ export function buildUserPrompt(endpoint: EndpointDetail): string {
   if (endpoint.requestBody && endpoint.requestBody.properties) {
     parts.push(`\n## Request Body`);
     parts.push(`**Content-Type**: ${endpoint.requestBody.contentType}`);
-    parts.push(`**Properties**:`);
-    endpoint.requestBody.properties.forEach((prop) => {
-      const required = prop.required ? " (required)" : "";
-      parts.push(
-        `- \`${prop.name}\` (${prop.type}${required}): ${
-          prop.description || "No description"
-        }`
+
+    // Schema comparison for BOPLA detection
+    if (endpoint.requestBody.allSchemaProperties && endpoint.requestBody.allSchemaProperties.length > 0) {
+      const exposedProps = new Set(endpoint.requestBody.properties.map((p) => p.name));
+      const allProps = endpoint.requestBody.allSchemaProperties;
+      const hiddenProps = allProps.filter((p) => !exposedProps.has(p.name));
+      const hiddenSensitiveProps = hiddenProps.filter((p) =>
+        SENSITIVE_PROPERTIES.includes(p.name as any)
       );
-    });
+
+      if (endpoint.requestBody.schemaRef) {
+        parts.push(`**Schema Reference**: ${endpoint.requestBody.schemaRef}`);
+      }
+
+      parts.push(`**Exposed Properties** (${endpoint.requestBody.properties.length} of ${allProps.length}):`);
+      endpoint.requestBody.properties.forEach((prop) => {
+        const required = prop.required ? " (required)" : "";
+        parts.push(
+          `- \`${prop.name}\` (${prop.type}${required}): ${
+            prop.description || "No description"
+          }`
+        );
+      });
+
+      if (hiddenProps.length > 0) {
+        parts.push(`\n**Hidden Properties** (${hiddenProps.length} not exposed in this endpoint):`);
+        hiddenProps.forEach((prop) => {
+          const isSensitive = SENSITIVE_PROPERTIES.includes(prop.name as any);
+          const sensitiveTag = isSensitive ? " ⚠️ SENSITIVE" : "";
+          const required = prop.required ? " (required in schema)" : "";
+          parts.push(
+            `- \`${prop.name}\` (${prop.type}${required})${sensitiveTag}: ${
+              prop.description || "No description"
+            }`
+          );
+        });
+
+        if (hiddenSensitiveProps.length > 0) {
+          parts.push(
+            `\n**⚠️ BOPLA Alert**: ${hiddenSensitiveProps.length} sensitive properties may be testable for mass assignment: ${hiddenSensitiveProps.map((p) => `\`${p.name}\``).join(", ")}`
+          );
+        }
+      }
+    } else {
+      // Standard display when no schema reference
+      parts.push(`**Properties**:`);
+      endpoint.requestBody.properties.forEach((prop) => {
+        const required = prop.required ? " (required)" : "";
+        parts.push(
+          `- \`${prop.name}\` (${prop.type}${required}): ${
+            prop.description || "No description"
+          }`
+        );
+      });
+    }
   }
 
   // Security/Authentication
@@ -329,15 +413,61 @@ export function buildDeepDiveUserPrompt(
   if (endpoint.requestBody && endpoint.requestBody.properties) {
     parts.push(`\n## Request Body`);
     parts.push(`**Content-Type**: ${endpoint.requestBody.contentType}`);
-    parts.push(`**Properties**:`);
-    endpoint.requestBody.properties.forEach((prop) => {
-      const required = prop.required ? " (required)" : "";
-      parts.push(
-        `- \`${prop.name}\` (${prop.type}${required}): ${
-          prop.description || "No description"
-        }`
+
+    // Schema comparison for BOPLA detection
+    if (endpoint.requestBody.allSchemaProperties && endpoint.requestBody.allSchemaProperties.length > 0) {
+      const exposedProps = new Set(endpoint.requestBody.properties.map((p) => p.name));
+      const allProps = endpoint.requestBody.allSchemaProperties;
+      const hiddenProps = allProps.filter((p) => !exposedProps.has(p.name));
+      const hiddenSensitiveProps = hiddenProps.filter((p) =>
+        SENSITIVE_PROPERTIES.includes(p.name as any)
       );
-    });
+
+      if (endpoint.requestBody.schemaRef) {
+        parts.push(`**Schema Reference**: ${endpoint.requestBody.schemaRef}`);
+      }
+
+      parts.push(`**Exposed Properties** (${endpoint.requestBody.properties.length} of ${allProps.length}):`);
+      endpoint.requestBody.properties.forEach((prop) => {
+        const required = prop.required ? " (required)" : "";
+        parts.push(
+          `- \`${prop.name}\` (${prop.type}${required}): ${
+            prop.description || "No description"
+          }`
+        );
+      });
+
+      if (hiddenProps.length > 0) {
+        parts.push(`\n**Hidden Properties** (${hiddenProps.length} not exposed in this endpoint):`);
+        hiddenProps.forEach((prop) => {
+          const isSensitive = SENSITIVE_PROPERTIES.includes(prop.name as any);
+          const sensitiveTag = isSensitive ? " ⚠️ SENSITIVE" : "";
+          const required = prop.required ? " (required in schema)" : "";
+          parts.push(
+            `- \`${prop.name}\` (${prop.type}${required})${sensitiveTag}: ${
+              prop.description || "No description"
+            }`
+          );
+        });
+
+        if (hiddenSensitiveProps.length > 0) {
+          parts.push(
+            `\n**⚠️ BOPLA Alert**: ${hiddenSensitiveProps.length} sensitive properties may be testable for mass assignment: ${hiddenSensitiveProps.map((p) => `\`${p.name}\``).join(", ")}`
+          );
+        }
+      }
+    } else {
+      // Standard display when no schema reference
+      parts.push(`**Properties**:`);
+      endpoint.requestBody.properties.forEach((prop) => {
+        const required = prop.required ? " (required)" : "";
+        parts.push(
+          `- \`${prop.name}\` (${prop.type}${required}): ${
+            prop.description || "No description"
+          }`
+        );
+      });
+    }
   }
 
   // Security/Authentication

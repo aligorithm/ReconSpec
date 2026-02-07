@@ -20,6 +20,8 @@ export interface RequestBodyDetail {
   contentType: string;
   properties: PropertyDetail[];
   rawSchema: Record<string, unknown> | null;
+  schemaRef: string | null;
+  allSchemaProperties: PropertyDetail[] | null;
 }
 
 /**
