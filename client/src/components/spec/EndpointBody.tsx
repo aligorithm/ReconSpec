@@ -1,12 +1,14 @@
 import type { EndpointDetail } from "@reconspec/shared";
 import { ParamList } from "./ParamList.js";
 import { SecurityAssessmentPanel } from "../analysis/SecurityAssessment.js";
+import { useSpec } from "../../context/SpecContext.js";
 
 interface EndpointBodyProps {
   endpoint: EndpointDetail;
 }
 
 export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
+  const { deepDiveScenario } = useSpec();
   const hasParameters = endpoint.parameters.length > 0;
   const hasRequestBody = endpoint.requestBody !== null;
 
@@ -98,7 +100,11 @@ export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
 
       {/* Security Assessment Section */}
       {endpoint.assessment ? (
-        <SecurityAssessmentPanel endpoint={endpoint} assessment={endpoint.assessment} />
+        <SecurityAssessmentPanel
+          endpoint={endpoint}
+          assessment={endpoint.assessment}
+          onDeepDive={deepDiveScenario}
+        />
       ) : (
         <div
           className="security-assessment"

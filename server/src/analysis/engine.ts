@@ -4,15 +4,19 @@
  * Orchestrates the analysis of endpoints against the OWASP Top 10.
  */
 
-import type { ParsedSpec, EndpointDetail, SecurityAssessment } from "@reconspec/shared";
+import type { ParsedSpec, EndpointDetail, SecurityAssessment, AttackScenario } from "@reconspec/shared";
 import type { LLMGateway } from "../llm/gateway.js";
 import type { LLMMessage } from "@reconspec/shared";
-import { buildSystemPrompt, buildUserPrompt, buildSummaryPrompt } from "./promptBuilder.js";
+import { buildSystemPrompt, buildUserPrompt, buildSummaryPrompt, buildDeepDiveSystemPrompt, buildDeepDiveUserPrompt, buildPayloadGenerationPrompt } from "./promptBuilder.js";
 import {
   parsePhaseAResponse,
   parseAPISummaryResponse,
   toAttackScenario,
+  parseDeepDiveResponse,
+  parsePayloadGenerationResponse,
   type APISummaryResponse,
+  type DeepDiveResponse,
+  type PayloadExample,
 } from "./responseParser.js";
 
 /**
@@ -264,4 +268,138 @@ export async function analyzeSpec(
     totalScenarios,
     failedEndpoints,
   };
+}
+
+/**
+ * Find an endpoint by ID in the spec
+ */
+function findEndpointById(spec: ParsedSpec, endpointId: string): EndpointDetail | null {
+  for (const group of spec.tagGroups) {
+    const endpoint = group.endpoints.find((e) => e.id === endpointId);
+    if (endpoint) return endpoint;
+  }
+  return null;
+}
+
+/**
+ * Generate a deep dive for a specific attack scenario
+ */
+export async function generateDeepDive(
+  gateway: LLMGateway,
+  spec: ParsedSpec,
+  endpointId: string,
+  scenarioId: string
+): Promise<{ success: boolean; data?: DeepDiveResponse; error?: string }> {
+  // Find the endpoint
+  const endpoint = findEndpointById(spec, endpointId);
+  if (!endpoint) {
+    return { success: false, error: "Endpoint not found" };
+  }
+
+  // Find the scenario
+  const scenario = endpoint.assessment?.scenarios.find((s) => s.id === scenarioId);
+  if (!scenario) {
+    return { success: false, error: "Scenario not found" };
+  }
+
+  const messages: LLMMessage[] = [
+    { role: "system", content: buildDeepDiveSystemPrompt() },
+    { role: "user", content: buildDeepDiveUserPrompt(endpoint, scenario) },
+  ];
+
+  try {
+    const response = await gateway.chat({
+      messages,
+      temperature: 0.4,
+      maxTokens: 3000,
+      responseFormat: "json",
+    });
+
+    const parsed = parseDeepDiveResponse(response.content, endpoint);
+
+    if (!parsed.success || !parsed.data) {
+      // Retry once
+      const retryResponse = await gateway.chat({
+        messages,
+        temperature: 0.4,
+        maxTokens: 3000,
+        responseFormat: "json",
+      });
+      const retryParsed = parseDeepDiveResponse(retryResponse.content, endpoint);
+      if (!retryParsed.success || !retryParsed.data) {
+        return {
+          success: false,
+          error: parsed.error || "Failed to parse response after retry",
+        };
+      }
+      return { success: true, data: retryParsed.data };
+    }
+
+    return { success: true, data: parsed.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to generate deep dive",
+    };
+  }
+}
+
+/**
+ * Generate additional payloads for a scenario
+ */
+export async function generateAdditionalPayloads(
+  gateway: LLMGateway,
+  spec: ParsedSpec,
+  endpointId: string,
+  scenarioId: string,
+  existingPayloads: string[]
+): Promise<{ success: boolean; data?: PayloadExample[]; error?: string }> {
+  // Find the endpoint
+  const endpoint = findEndpointById(spec, endpointId);
+  if (!endpoint) {
+    return { success: false, error: "Endpoint not found" };
+  }
+
+  // Find the scenario
+  const scenario = endpoint.assessment?.scenarios.find((s) => s.id === scenarioId);
+  if (!scenario) {
+    return { success: false, error: "Scenario not found" };
+  }
+
+  const messages: LLMMessage[] = [
+    {
+      role: "system",
+      content:
+        "You are an API security testing advisor. Generate additional attack payloads and return ONLY a JSON response.",
+    },
+    {
+      role: "user",
+      content: buildPayloadGenerationPrompt(endpoint, scenario, existingPayloads),
+    },
+  ];
+
+  try {
+    const response = await gateway.chat({
+      messages,
+      temperature: 0.5,
+      maxTokens: 2500,
+      responseFormat: "json",
+    });
+
+    const parsed = parsePayloadGenerationResponse(response.content);
+
+    if (!parsed.success || !parsed.data) {
+      return {
+        success: false,
+        error: parsed.error || "Failed to parse response",
+      };
+    }
+
+    return { success: true, data: parsed.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to generate payloads",
+    };
+  }
 }

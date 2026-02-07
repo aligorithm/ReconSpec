@@ -567,20 +567,6 @@
   align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color var(--transition-fast) ease;
-}
-
-.attack-scenario-header:hover {
-  background: var(--bg-secondary);
-}
-
-.attack-scenario-header:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: -2px;
 }
 
 .scenario-number {
@@ -688,6 +674,180 @@
 .scenario-category[aria*="API10"] {
   background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(219, 39, 119, 0.08));
   color: #db2777;
+}
+
+/* ─── Scenario Expand Button ─── */
+.scenario-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-default);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: var(--font-body);
+  margin-top: 6px;
+  transition: color var(--transition-fast) ease;
+}
+
+.scenario-expand-btn:hover {
+  color: var(--brand-hover);
+}
+
+.scenario-expand-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.scenario-expand-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Expanded Deep Dive ─── */
+.scenario-deep-dive {
+  padding: 0 16px 16px 48px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.deep-dive-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.deep-dive-section {
+  margin-bottom: 14px;
+}
+
+.deep-dive-section:last-child {
+  margin-bottom: 0;
+}
+
+.deep-dive-heading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+
+.deep-dive-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.deep-dive-steps {
+  list-style: none;
+  counter-reset: steps;
+  padding-left: 0;
+  margin: 0;
+}
+
+.deep-dive-steps li {
+  counter-increment: steps;
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 3px 0;
+}
+
+.deep-dive-steps li::before {
+  content: counter(steps);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-default);
+  background: var(--brand-bg);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.payload-block {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: auto;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.payload-label {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.generate-payload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-default);
+  background: var(--brand-bg);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all var(--transition-fast) ease;
+}
+
+.generate-payload-btn:hover {
+  background: var(--brand-bg-hover);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.generate-payload-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.generate-payload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ─── Add Scenario Row ─── */

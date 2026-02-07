@@ -6,8 +6,8 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import type { ParsedSpec, EndpointDetail, SecurityAssessment } from "@reconspec/shared";
-import { parseSpec, analyzeSpec as apiAnalyzeSpec, type APISummary } from "../services/api.js";
+import type { ParsedSpec, EndpointDetail, SecurityAssessment, DeepDiveResult } from "@reconspec/shared";
+import { parseSpec, analyzeSpec as apiAnalyzeSpec, generateDeepDive, generateAdditionalPayloads, type APISummary } from "../services/api.js";
 
 /**
  * State shape for the spec context
@@ -50,7 +50,10 @@ type SpecAction =
   | { type: "ANALYSIS_COMPLETE"; payload: { timestamp: string; errors: Array<{ endpointId: string; error: string }> } }
   | { type: "ANALYSIS_ERROR"; payload: { endpointId: string; error: string } }
   | { type: "ANALYSIS_FAILED"; payload: string }
-  | { type: "ANALYSIS_CLEARED" };
+  | { type: "ANALYSIS_CLEARED" }
+  // Deep dive actions
+  | { type: "DEEP_DIVE_COMPLETE"; payload: { endpointId: string; scenarioId: string; deepDive: DeepDiveResult } }
+  | { type: "PAYLOADS_ADDED"; payload: { endpointId: string; scenarioId: string; payloads: any[] } };
 
 /**
  * Initial state
@@ -240,6 +243,77 @@ function specReducer(state: SpecState, action: SpecAction): SpecState {
         analysisErrors: [],
       };
 
+    case "DEEP_DIVE_COMPLETE": {
+      const { endpointId, scenarioId, deepDive } = action.payload;
+
+      if (!state.parsedSpec) return state;
+
+      const updatedTagGroups = state.parsedSpec.tagGroups.map((group) => ({
+        ...group,
+        endpoints: group.endpoints.map((ep) => {
+          if (ep.id !== endpointId) return ep;
+
+          const updatedAssessment = ep.assessment
+            ? {
+                ...ep.assessment,
+                scenarios: ep.assessment.scenarios.map((scenario) =>
+                  scenario.id === scenarioId
+                    ? { ...scenario, deepDive }
+                    : scenario
+                ),
+              }
+            : null;
+
+          return { ...ep, assessment: updatedAssessment };
+        }),
+      }));
+
+      return {
+        ...state,
+        parsedSpec: { ...state.parsedSpec, tagGroups: updatedTagGroups },
+      };
+    }
+
+    case "PAYLOADS_ADDED": {
+      const { endpointId, scenarioId, payloads } = action.payload;
+
+      if (!state.parsedSpec) return state;
+
+      const updatedTagGroups = state.parsedSpec.tagGroups.map((group) => ({
+        ...group,
+        endpoints: group.endpoints.map((ep) => {
+          if (ep.id !== endpointId) return ep;
+          if (!ep.assessment) return ep;
+
+          return {
+            ...ep,
+            assessment: {
+              ...ep.assessment,
+              scenarios: ep.assessment.scenarios.map((scenario) => {
+                if (scenario.id !== scenarioId || !scenario.deepDive) return scenario;
+
+                return {
+                  ...scenario,
+                  deepDive: {
+                    ...scenario.deepDive,
+                    samplePayloads: [
+                      ...scenario.deepDive.samplePayloads,
+                      ...payloads,
+                    ],
+                  },
+                };
+              }),
+            },
+          };
+        }),
+      }));
+
+      return {
+        ...state,
+        parsedSpec: { ...state.parsedSpec, tagGroups: updatedTagGroups },
+      };
+    }
+
     default:
       return state;
   }
@@ -261,6 +335,8 @@ interface SpecContextValue extends SpecState {
   // Analysis methods
   analyzeSpec: () => Promise<void>;
   clearAnalysis: () => void;
+  // Deep dive methods
+  deepDiveScenario: (endpointId: string, scenarioId: string) => Promise<void>;
 }
 
 /**
@@ -383,6 +459,26 @@ export function SpecProvider({ children }: SpecProviderProps): JSX.Element {
     dispatch({ type: "ANALYSIS_CLEARED" });
   }, []);
 
+  const deepDiveScenario = useCallback(async (endpointId: string, scenarioId: string) => {
+    console.log('[SpecContext] deepDiveScenario called', { endpointId, scenarioId });
+    try {
+      const result = await generateDeepDive(endpointId, scenarioId);
+      console.log('[SpecContext] Deep dive result received:', result);
+      dispatch({
+        type: "DEEP_DIVE_COMPLETE",
+        payload: {
+          endpointId,
+          scenarioId,
+          deepDive: result,
+        },
+      });
+      console.log('[SpecContext] Dispatched DEEP_DIVE_COMPLETE');
+    } catch (error) {
+      console.error('[SpecContext] Deep dive failed:', error);
+      throw error;
+    }
+  }, []);
+
   const value: SpecContextValue = {
     ...state,
     loadSpec,
@@ -396,6 +492,7 @@ export function SpecProvider({ children }: SpecProviderProps): JSX.Element {
     collapseAllEndpoints,
     analyzeSpec,
     clearAnalysis,
+    deepDiveScenario,
   };
 
   return <SpecContext.Provider value={value}>{children}</SpecContext.Provider>;

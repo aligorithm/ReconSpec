@@ -207,3 +207,53 @@ export function analyzeSpec(
   return () => controller.abort();
 }
 
+/**
+ * Generate a deep dive for a specific attack scenario
+ */
+export async function generateDeepDive(
+  endpointId: string,
+  scenarioId: string
+): Promise<any> {
+  console.log('[api] generateDeepDive called', { endpointId, scenarioId });
+
+  const response = await fetch(`${API_BASE_URL}/analyze/deep-dive`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ endpointId, scenarioId }),
+  });
+
+  console.log('[api] generateDeepDive response status:', response.status);
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error('[api] generateDeepDive error:', error);
+    throw new Error(error.error || "Failed to generate deep dive");
+  }
+
+  const data = await response.json();
+  console.log('[api] generateDeepDive success, data:', data);
+  return data;
+}
+
+/**
+ * Generate additional payloads for a scenario
+ */
+export async function generateAdditionalPayloads(
+  endpointId: string,
+  scenarioId: string,
+  existingPayloads: string[]
+): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/analyze/generate-payloads`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ endpointId, scenarioId, existingPayloads }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to generate payloads");
+  }
+
+  return response.json();
+}
+

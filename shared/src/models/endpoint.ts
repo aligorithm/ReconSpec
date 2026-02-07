@@ -48,12 +48,24 @@ export interface AttackScenario {
 
 export interface DeepDiveResult {
   overview: string;
-  steps: string[];
+  steps: DeepDiveStep[];
+  expectedResponses: ExpectedResponse[];
   samplePayloads: PayloadExample[];
+}
+
+export interface DeepDiveStep {
+  description: string;
+  parameterFocus: string[];
+}
+
+export interface ExpectedResponse {
+  condition: string;
+  indicators: string[];
 }
 
 export interface PayloadExample {
   label: string;
   contentType: string;
   body: string;
+  description: string;
 }

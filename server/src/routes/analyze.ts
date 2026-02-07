@@ -3,12 +3,14 @@
  *
  * POST /api/analyze - Trigger Phase A analysis with SSE streaming
  * GET /api/analyze/status - Get analysis status
+ * POST /api/analyze/deep-dive - Generate deep dive for a scenario
+ * POST /api/analyze/generate-payloads - Generate additional payloads
  */
 
 import { Router, Request, Response } from "express";
 import type { ParsedSpec } from "@reconspec/shared";
 import { asyncHandler } from "../middleware/errorHandler.js";
-import { analyzeSpec } from "../analysis/engine.js";
+import { analyzeSpec, generateDeepDive, generateAdditionalPayloads } from "../analysis/engine.js";
 
 const router = Router();
 
@@ -69,6 +71,9 @@ router.post(
       return;
     }
 
+    // Store spec in app.locals for deep dive routes
+    req.app.locals.currentSpec = spec;
+
     // Set SSE headers
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -87,6 +92,18 @@ router.post(
         spec,
         (event) => {
           sendSSE(res, event.type, event.data);
+
+          // Update the stored spec with assessment data as endpoints complete
+          if (event.type === "endpoint_complete") {
+            const { endpointId, assessment } = event.data;
+            for (const group of req.app.locals.currentSpec.tagGroups) {
+              const endpoint = group.endpoints.find((e: { id: string }) => e.id === endpointId);
+              if (endpoint) {
+                endpoint.assessment = assessment;
+                break;
+              }
+            }
+          }
         },
         3 // Concurrency limit
       );
@@ -125,6 +142,106 @@ router.get(
   "/status",
   asyncHandler(async (req: Request, res: Response) => {
     res.json(currentAnalysis);
+  })
+);
+
+/**
+ * POST /api/analyze/deep-dive
+ *
+ * Generates a deep dive analysis for a specific attack scenario.
+ */
+router.post(
+  "/deep-dive",
+  asyncHandler(async (req: Request, res: Response) => {
+    const gateway = req.app.locals.llmGateway;
+    if (!gateway) {
+      res.status(400).json({
+        error: "No LLM provider configured. Set LLM_PROVIDER and LLM_API_KEY in .env",
+      });
+      return;
+    }
+
+    const { endpointId, scenarioId } = req.body;
+
+    if (!endpointId || !scenarioId) {
+      res.status(400).json({
+        error: "Missing required fields: endpointId and scenarioId",
+      });
+      return;
+    }
+
+    // Get the spec from session (stored during analysis)
+    const spec = req.app.locals.currentSpec as ParsedSpec | undefined;
+    if (!spec) {
+      res.status(404).json({
+        error: "No spec found. Please run an analysis first.",
+      });
+      return;
+    }
+
+    const result = await generateDeepDive(gateway, spec, endpointId, scenarioId);
+
+    if (!result.success || !result.data) {
+      res.status(500).json({
+        error: result.error || "Failed to generate deep dive",
+      });
+      return;
+    }
+
+    res.json(result.data);
+  })
+);
+
+/**
+ * POST /api/analyze/generate-payloads
+ *
+ * Generates additional payloads for a specific attack scenario.
+ */
+router.post(
+  "/generate-payloads",
+  asyncHandler(async (req: Request, res: Response) => {
+    const gateway = req.app.locals.llmGateway;
+    if (!gateway) {
+      res.status(400).json({
+        error: "No LLM provider configured. Set LLM_PROVIDER and LLM_API_KEY in .env",
+      });
+      return;
+    }
+
+    const { endpointId, scenarioId, existingPayloads } = req.body;
+
+    if (!endpointId || !scenarioId || !Array.isArray(existingPayloads)) {
+      res.status(400).json({
+        error: "Missing required fields: endpointId, scenarioId, existingPayloads",
+      });
+      return;
+    }
+
+    // Get the spec from session
+    const spec = req.app.locals.currentSpec as ParsedSpec | undefined;
+    if (!spec) {
+      res.status(404).json({
+        error: "No spec found. Please run an analysis first.",
+      });
+      return;
+    }
+
+    const result = await generateAdditionalPayloads(
+      gateway,
+      spec,
+      endpointId,
+      scenarioId,
+      existingPayloads
+    );
+
+    if (!result.success || !result.data) {
+      res.status(500).json({
+        error: result.error || "Failed to generate payloads",
+      });
+      return;
+    }
+
+    res.json({ payloads: result.data });
   })
 );
 

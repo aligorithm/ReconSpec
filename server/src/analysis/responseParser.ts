@@ -212,3 +212,224 @@ export function toAttackScenario(
     deepDive: null, // Populated in Phase B
   };
 }
+
+/**
+ * Phase B Deep Dive response schema
+ */
+export interface DeepDiveResponse {
+  overview: string;
+  steps: DeepDiveStep[];
+  expectedResponses: ExpectedResponse[];
+  samplePayloads: PayloadExample[];
+}
+
+export interface DeepDiveStep {
+  description: string;
+  parameterFocus: string[];
+}
+
+export interface ExpectedResponse {
+  condition: string;
+  indicators: string[];
+}
+
+export interface PayloadExample {
+  label: string;
+  contentType: string;
+  body: string;
+  description: string;
+}
+
+/**
+ * Parse and validate Phase B Deep Dive response from LLM
+ */
+export function parseDeepDiveResponse(
+  jsonResponse: string,
+  endpoint: EndpointDetail
+): { success: boolean; data?: DeepDiveResponse; error?: string } {
+  try {
+    // Remove markdown code fences if present
+    const cleanedJson = jsonResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanedJson) as DeepDiveResponse;
+
+    // Validate overview
+    if (typeof parsed.overview !== "string" || !parsed.overview.trim()) {
+      return { success: false, error: "Missing or invalid overview" };
+    }
+
+    // Validate steps
+    if (!Array.isArray(parsed.steps)) {
+      return { success: false, error: "Missing or invalid steps array" };
+    }
+
+    // Get valid parameter names
+    const validParamNames = new Set([
+      ...endpoint.parameters.map((p) => p.name),
+      ...(endpoint.requestBody?.properties.map((f) => f.name) ?? []),
+    ]);
+
+    for (let i = 0; i < parsed.steps.length; i++) {
+      const step = parsed.steps[i];
+
+      if (typeof step.description !== "string" || !step.description.trim()) {
+        return {
+          success: false,
+          error: `Step ${i + 1}: missing or invalid description`,
+        };
+      }
+
+      if (!Array.isArray(step.parameterFocus)) {
+        return {
+          success: false,
+          error: `Step ${i + 1}: missing or invalid parameterFocus`,
+        };
+      }
+
+      // Validate that all parameterFocus values exist on the endpoint
+      step.parameterFocus = step.parameterFocus.filter((param) =>
+        validParamNames.has(param)
+      );
+    }
+
+    // Validate expectedResponses
+    if (!Array.isArray(parsed.expectedResponses)) {
+      return { success: false, error: "Missing or invalid expectedResponses array" };
+    }
+
+    for (let i = 0; i < parsed.expectedResponses.length; i++) {
+      const resp = parsed.expectedResponses[i];
+
+      if (typeof resp.condition !== "string" || !resp.condition.trim()) {
+        return {
+          success: false,
+          error: `Expected response ${i + 1}: missing or invalid condition`,
+        };
+      }
+
+      if (!Array.isArray(resp.indicators)) {
+        return {
+          success: false,
+          error: `Expected response ${i + 1}: missing or invalid indicators`,
+        };
+      }
+    }
+
+    // Validate samplePayloads
+    if (!Array.isArray(parsed.samplePayloads)) {
+      return { success: false, error: "Missing or invalid samplePayloads array" };
+    }
+
+    for (let i = 0; i < parsed.samplePayloads.length; i++) {
+      const payload = parsed.samplePayloads[i];
+
+      if (typeof payload.label !== "string" || !payload.label.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid label`,
+        };
+      }
+
+      if (typeof payload.contentType !== "string" || !payload.contentType.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid contentType`,
+        };
+      }
+
+      if (typeof payload.body !== "string" || !payload.body.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid body`,
+        };
+      }
+
+      if (typeof payload.description !== "string" || !payload.description.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid description`,
+        };
+      }
+
+      // Sanitize body to prevent HTML injection in frontend
+      // Replace < with &lt;, > with &gt;, but preserve JSON structure
+      payload.body = payload.body
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    return { success: true, data: parsed };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to parse JSON",
+    };
+  }
+}
+
+/**
+ * Parse payload generation response
+ */
+export function parsePayloadGenerationResponse(
+  jsonResponse: string
+): { success: boolean; data?: PayloadExample[]; error?: string } {
+  try {
+    const cleanedJson = jsonResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanedJson) as { payloads: PayloadExample[] };
+
+    if (!Array.isArray(parsed.payloads)) {
+      return { success: false, error: "Missing or invalid payloads array" };
+    }
+
+    for (let i = 0; i < parsed.payloads.length; i++) {
+      const payload = parsed.payloads[i];
+
+      if (typeof payload.label !== "string" || !payload.label.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid label`,
+        };
+      }
+
+      if (typeof payload.contentType !== "string" || !payload.contentType.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid contentType`,
+        };
+      }
+
+      if (typeof payload.body !== "string" || !payload.body.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid body`,
+        };
+      }
+
+      if (typeof payload.description !== "string" || !payload.description.trim()) {
+        return {
+          success: false,
+          error: `Payload ${i + 1}: missing or invalid description`,
+        };
+      }
+
+      // Sanitize body
+      payload.body = payload.body
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    return { success: true, data: parsed.payloads };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to parse JSON",
+    };
+  }
+}

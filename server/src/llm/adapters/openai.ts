@@ -47,8 +47,8 @@ export class OpenAIAdapter implements LLMGateway {
       return {
         content: response.choices[0].message.content || "",
         usage: {
-          inputTokens: response.usage.prompt_tokens,
-          outputTokens: response.usage.completion_tokens,
+          inputTokens: response.usage?.prompt_tokens || 0,
+          outputTokens: response.usage?.completion_tokens || 0,
         },
         model: response.model,
       };

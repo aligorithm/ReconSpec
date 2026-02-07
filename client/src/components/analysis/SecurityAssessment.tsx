@@ -4,11 +4,13 @@ import { AttackScenarioRow } from "./AttackScenarioRow.js";
 interface SecurityAssessmentProps {
   endpoint: EndpointDetail;
   assessment: SecurityAssessment;
+  onDeepDive: (endpointId: string, scenarioId: string) => Promise<void>;
 }
 
 export function SecurityAssessmentPanel({
   endpoint,
   assessment,
+  onDeepDive,
 }: SecurityAssessmentProps): JSX.Element {
   const scenarioCount = assessment.scenarios.length;
 
@@ -54,6 +56,8 @@ export function SecurityAssessmentPanel({
               key={scenario.id}
               scenario={scenario}
               index={index}
+              endpointId={endpoint.id}
+              onDeepDive={onDeepDive}
             />
           ))}
 
