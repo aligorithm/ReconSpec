@@ -1,7 +1,8 @@
 import { useSpec } from "../../context/SpecContext.js";
+import type { APISummary } from "../../services/api.js";
 
 export function SummaryCard(): JSX.Element | null {
-  const { parsedSpec } = useSpec();
+  const { parsedSpec, apiSummary, analysisTimestamp } = useSpec();
 
   if (!parsedSpec) return null;
 
@@ -11,6 +12,14 @@ export function SummaryCard(): JSX.Element | null {
   );
 
   const totalAuthSchemes = parsedSpec.auth.length;
+
+  // Calculate total scenarios from analyzed endpoints
+  const totalScenarios = parsedSpec.tagGroups.reduce(
+    (sum, group) => sum + group.endpoints.reduce((epSum, ep) => epSum + (ep.assessment?.scenarios.length || 0), 0),
+    0
+  );
+
+  const hasAnalysis = apiSummary !== null;
 
   return (
     <section className="summary-card" aria-label="API summary">
@@ -22,19 +31,46 @@ export function SummaryCard(): JSX.Element | null {
           </p>
         </div>
         <div className="summary-stats">
-          <div className="stat">
-            <div className="stat-value">{parsedSpec.tagGroups.length}</div>
-            <div className="stat-label">Groups</div>
-          </div>
-          <div className="stat">
-            <div className="stat-value">{totalEndpoints}</div>
-            <div className="stat-label">Endpoints</div>
-          </div>
+          {hasAnalysis ? (
+            <>
+              <div className="stat">
+                <div className="stat-value">{totalScenarios}</div>
+                <div className="stat-label">Scenarios</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">{totalEndpoints}</div>
+                <div className="stat-label">Endpoints</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="stat">
+                <div className="stat-value">{parsedSpec.tagGroups.length}</div>
+                <div className="stat-label">Groups</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">{totalEndpoints}</div>
+                <div className="stat-label">Endpoints</div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       <div className="summary-body">
-        {parsedSpec.description && <p>{parsedSpec.description}</p>}
+        {hasAnalysis && apiSummary ? (
+          <>
+            {apiSummary.overview
+              .split("\n\n")
+              .map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+          </>
+        ) : (
+          <>
+            {parsedSpec.description && <p>{parsedSpec.description}</p>}
+          </>
+        )}
 
         {/* Server URLs */}
         {parsedSpec.servers.length > 0 && (
@@ -91,17 +127,28 @@ export function SummaryCard(): JSX.Element | null {
         )}
       </div>
 
-      {/* Risk tags section - placeholder for Phase 3 */}
+      {/* Risk tags section */}
       <div className="risk-tags" aria-label="Security analysis">
-        <span
-          style={{
-            fontSize: "13px",
-            color: "var(--text-tertiary)",
-            fontStyle: "italic",
-          }}
-        >
-          Security analysis will be available in Phase 3
-        </span>
+        {hasAnalysis && apiSummary && apiSummary.riskCategories.length > 0 ? (
+          apiSummary.riskCategories.map((cat) => (
+            <span key={cat.categoryId} className="risk-tag">
+              {cat.categoryId} — {cat.categoryName}{" "}
+              <span className="tag-count">{cat.count}</span>
+            </span>
+          ))
+        ) : (
+          <span
+            style={{
+              fontSize: "13px",
+              color: "var(--text-tertiary)",
+              fontStyle: "italic",
+            }}
+          >
+            {hasAnalysis
+              ? "No attack scenarios identified"
+              : "Run analysis to identify attack scenarios"}
+          </span>
+        )}
       </div>
     </section>
   );

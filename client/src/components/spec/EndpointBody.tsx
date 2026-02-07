@@ -1,5 +1,6 @@
 import type { EndpointDetail } from "@reconspec/shared";
 import { ParamList } from "./ParamList.js";
+import { SecurityAssessmentPanel } from "../analysis/SecurityAssessment.js";
 
 interface EndpointBodyProps {
   endpoint: EndpointDetail;
@@ -95,39 +96,43 @@ export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
         )}
       </div>
 
-      {/* Security Assessment Section - Placeholder for Phase 3 */}
-      <div
-        className="security-assessment"
-        role="region"
-        aria-label={`Security assessment for ${endpoint.method.toUpperCase()} ${endpoint.path}`}
-      >
-        <div className="security-assessment-header">
-          <div className="security-assessment-title">
-            <svg
-              className="shield-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Security Assessment
-          </div>
-          <span className="scenario-count-label">Not analyzed</span>
-        </div>
+      {/* Security Assessment Section */}
+      {endpoint.assessment ? (
+        <SecurityAssessmentPanel endpoint={endpoint} assessment={endpoint.assessment} />
+      ) : (
         <div
-          style={{
-            padding: "24px",
-            textAlign: "center",
-            color: "var(--text-tertiary)",
-            fontSize: "14px",
-            fontStyle: "italic",
-          }}
+          className="security-assessment"
+          role="region"
+          aria-label={`Security assessment for ${endpoint.method.toUpperCase()} ${endpoint.path}`}
         >
-          Run analysis to generate attack scenarios.
+          <div className="security-assessment-header">
+            <div className="security-assessment-title">
+              <svg
+                className="shield-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              Security Assessment
+            </div>
+            <span className="scenario-count-label">Not analyzed</span>
+          </div>
+          <div
+            style={{
+              padding: "24px",
+              textAlign: "center",
+              color: "var(--text-tertiary)",
+              fontSize: "14px",
+              fontStyle: "italic",
+            }}
+          >
+            Run analysis to generate attack scenarios.
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

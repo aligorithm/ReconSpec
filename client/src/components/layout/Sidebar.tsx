@@ -28,26 +28,32 @@ export function Sidebar(): JSX.Element | null {
             >
               {group.name}
             </div>
-            {group.endpoints.map((endpoint) => (
-              <a
-                key={endpoint.id}
-                href={`#${endpoint.id}`}
-                className={`sidebar-item${selectedEndpoint === endpoint.id ? " active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  selectEndpoint(endpoint.id);
-                  // Scroll to endpoint
-                  document.getElementById(endpoint.id)?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }}
-              >
-                <MethodBadge method={endpoint.method} variant="mini" />
-                <span className="path">{endpoint.path}</span>
-                {/* Phase 1: No assessment count */}
-              </a>
-            ))}
+            {group.endpoints.map((endpoint) => {
+              const scenarioCount = endpoint.assessment?.scenarios.length ?? 0;
+
+              return (
+                <a
+                  key={endpoint.id}
+                  href={`#${endpoint.id}`}
+                  className={`sidebar-item${selectedEndpoint === endpoint.id ? " active" : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    selectEndpoint(endpoint.id);
+                    // Scroll to endpoint
+                    document.getElementById(endpoint.id)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }}
+                >
+                  <MethodBadge method={endpoint.method} variant="mini" />
+                  <span className="path">{endpoint.path}</span>
+                  {scenarioCount > 0 && (
+                    <span className="sidebar-count">{scenarioCount}</span>
+                  )}
+                </a>
+              );
+            })}
           </div>
         ))}
       </div>

@@ -13,6 +13,8 @@ export function EndpointCard({ endpoint }: EndpointCardProps): JSX.Element {
   const isExpanded = expandedEndpoints.has(endpoint.id);
   const isSelected = selectedEndpoint === endpoint.id;
 
+  const scenarioCount = endpoint.assessment?.scenarios.length ?? 0;
+
   // Highlight path parameters
   const pathWithParams = endpoint.path.replace(
     /\{([^}]+)\}/g,
@@ -58,6 +60,22 @@ export function EndpointCard({ endpoint }: EndpointCardProps): JSX.Element {
             }}
           >
             DEPRECATED
+          </span>
+        )}
+        {scenarioCount > 0 && (
+          <span className="endpoint-scenario-count">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              aria-hidden="true"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            {scenarioCount}
           </span>
         )}
         <svg

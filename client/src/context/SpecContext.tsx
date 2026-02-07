@@ -6,8 +6,8 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import type { ParsedSpec, EndpointDetail } from "@reconspec/shared";
-import { parseSpec } from "../services/api.js";
+import type { ParsedSpec, EndpointDetail, SecurityAssessment } from "@reconspec/shared";
+import { parseSpec, analyzeSpec as apiAnalyzeSpec, type APISummary } from "../services/api.js";
 
 /**
  * State shape for the spec context
@@ -19,6 +19,12 @@ interface SpecState {
   expandedGroups: Set<string>;
   expandedEndpoints: Set<string>;
   selectedEndpoint: string | null;
+  // Analysis state
+  isAnalyzing: boolean;
+  analysisProgress: { completed: number; total: number; currentEndpoint: string } | null;
+  apiSummary: APISummary | null;
+  analysisTimestamp: string | null;
+  analysisErrors: Array<{ endpointId: string; error: string }>;
 }
 
 /**
@@ -35,7 +41,16 @@ type SpecAction =
   | { type: "EXPAND_ALL_GROUPS" }
   | { type: "COLLAPSE_ALL_GROUPS" }
   | { type: "EXPAND_ALL_ENDPOINTS" }
-  | { type: "COLLAPSE_ALL_ENDPOINTS" };
+  | { type: "COLLAPSE_ALL_ENDPOINTS" }
+  // Analysis actions
+  | { type: "ANALYSIS_STARTED" }
+  | { type: "ANALYSIS_PROGRESS"; payload: { completed: number; total: number; currentEndpoint: string } }
+  | { type: "ANALYSIS_ENDPOINT_COMPLETE"; payload: { endpointId: string; assessment: SecurityAssessment } }
+  | { type: "ANALYSIS_SUMMARY_COMPLETE"; payload: APISummary }
+  | { type: "ANALYSIS_COMPLETE"; payload: { timestamp: string; errors: Array<{ endpointId: string; error: string }> } }
+  | { type: "ANALYSIS_ERROR"; payload: { endpointId: string; error: string } }
+  | { type: "ANALYSIS_FAILED"; payload: string }
+  | { type: "ANALYSIS_CLEARED" };
 
 /**
  * Initial state
@@ -47,6 +62,11 @@ const initialState: SpecState = {
   expandedGroups: new Set(),
   expandedEndpoints: new Set(),
   selectedEndpoint: null,
+  isAnalyzing: false,
+  analysisProgress: null,
+  apiSummary: null,
+  analysisTimestamp: null,
+  analysisErrors: [],
 };
 
 /**
@@ -145,6 +165,81 @@ function specReducer(state: SpecState, action: SpecAction): SpecState {
         expandedEndpoints: new Set(),
       };
 
+    case "ANALYSIS_STARTED":
+      return {
+        ...state,
+        isAnalyzing: true,
+        analysisProgress: null,
+        analysisErrors: [],
+      };
+
+    case "ANALYSIS_PROGRESS":
+      return {
+        ...state,
+        analysisProgress: action.payload,
+      };
+
+    case "ANALYSIS_ENDPOINT_COMPLETE": {
+      if (!state.parsedSpec) return state;
+
+      // Update the endpoint's assessment in the tag groups
+      const updatedTagGroups = state.parsedSpec.tagGroups.map((group) => ({
+        ...group,
+        endpoints: group.endpoints.map((ep) =>
+          ep.id === action.payload.endpointId
+            ? { ...ep, assessment: action.payload.assessment }
+            : ep
+        ),
+      }));
+
+      return {
+        ...state,
+        parsedSpec: {
+          ...state.parsedSpec,
+          tagGroups: updatedTagGroups,
+        },
+      };
+    }
+
+    case "ANALYSIS_SUMMARY_COMPLETE":
+      return {
+        ...state,
+        apiSummary: action.payload,
+      };
+
+    case "ANALYSIS_COMPLETE":
+      return {
+        ...state,
+        isAnalyzing: false,
+        analysisProgress: null,
+        analysisTimestamp: action.payload.timestamp,
+        analysisErrors: action.payload.errors,
+      };
+
+    case "ANALYSIS_ERROR":
+      return {
+        ...state,
+        analysisErrors: [...state.analysisErrors, action.payload],
+      };
+
+    case "ANALYSIS_FAILED":
+      return {
+        ...state,
+        isAnalyzing: false,
+        analysisProgress: null,
+        error: action.payload,
+      };
+
+    case "ANALYSIS_CLEARED":
+      return {
+        ...state,
+        isAnalyzing: false,
+        analysisProgress: null,
+        apiSummary: null,
+        analysisTimestamp: null,
+        analysisErrors: [],
+      };
+
     default:
       return state;
   }
@@ -163,6 +258,9 @@ interface SpecContextValue extends SpecState {
   collapseAllGroups: () => void;
   expandAllEndpoints: () => void;
   collapseAllEndpoints: () => void;
+  // Analysis methods
+  analyzeSpec: () => Promise<void>;
+  clearAnalysis: () => void;
 }
 
 /**
@@ -226,6 +324,65 @@ export function SpecProvider({ children }: SpecProviderProps): JSX.Element {
     dispatch({ type: "COLLAPSE_ALL_ENDPOINTS" });
   }, []);
 
+  const analyzeSpec = useCallback(async () => {
+    if (!state.parsedSpec) {
+      dispatch({ type: "SPEC_ERROR", payload: "No spec loaded" });
+      return;
+    }
+
+    dispatch({ type: "ANALYSIS_STARTED" });
+
+    const errors: Array<{ endpointId: string; error: string }> = [];
+
+    apiAnalyzeSpec(
+      state.parsedSpec,
+      // onProgress
+      (event) => {
+        if (event.type === "progress") {
+          dispatch({ type: "ANALYSIS_PROGRESS", payload: event.data });
+        } else if (event.type === "endpoint_complete") {
+          // Update the endpoint with its assessment
+          dispatch({
+            type: "ANALYSIS_ENDPOINT_COMPLETE",
+            payload: {
+              endpointId: event.data.endpointId,
+              assessment: event.data.assessment,
+            },
+          });
+        } else if (event.type === "summary_complete") {
+          dispatch({ type: "ANALYSIS_SUMMARY_COMPLETE", payload: event.data });
+        } else if (event.type === "error" && event.data.endpointId) {
+          // Individual endpoint error
+          dispatch({
+            type: "ANALYSIS_ERROR",
+            payload: {
+              endpointId: event.data.endpointId,
+              error: event.data.error,
+            },
+          });
+        }
+      },
+      // onComplete
+      (result) => {
+        dispatch({
+          type: "ANALYSIS_COMPLETE",
+          payload: {
+            timestamp: new Date().toISOString(),
+            errors,
+          },
+        });
+      },
+      // onError
+      (error) => {
+        dispatch({ type: "ANALYSIS_FAILED", payload: error });
+      }
+    );
+  }, [state.parsedSpec]);
+
+  const clearAnalysis = useCallback(() => {
+    dispatch({ type: "ANALYSIS_CLEARED" });
+  }, []);
+
   const value: SpecContextValue = {
     ...state,
     loadSpec,
@@ -237,6 +394,8 @@ export function SpecProvider({ children }: SpecProviderProps): JSX.Element {
     collapseAllGroups,
     expandAllEndpoints,
     collapseAllEndpoints,
+    analyzeSpec,
+    clearAnalysis,
   };
 
   return <SpecContext.Provider value={value}>{children}</SpecContext.Provider>;

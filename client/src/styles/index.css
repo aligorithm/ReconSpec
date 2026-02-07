@@ -552,6 +552,176 @@
   font-weight: 400;
 }
 
+/* ─── Attack Scenario Rows ─── */
+.attack-scenario {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.attack-scenario:last-child {
+  border-bottom: none;
+}
+
+.attack-scenario-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast) ease;
+}
+
+.attack-scenario-header:hover {
+  background: var(--bg-secondary);
+}
+
+.attack-scenario-header:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+
+.scenario-number {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.scenario-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.scenario-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.scenario-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.scenario-params {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.scenario-params code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+/* Category-specific badge colors */
+.scenario-category[aria*="API1"] {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
+  color: #dc2626;
+}
+
+.scenario-category[aria*="API2"] {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08));
+  color: #d97706;
+}
+
+.scenario-category[aria*="API3"] {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
+  color: #dc2626;
+}
+
+.scenario-category[aria*="API4"] {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(147, 51, 234, 0.08));
+  color: #a855f7;
+}
+
+.scenario-category[aria*="API5"] {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(202, 138, 4, 0.08));
+  color: #ca8a04;
+}
+
+.scenario-category[aria*="API6"] {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(13, 148, 136, 0.08));
+  color: #0d9488;
+}
+
+.scenario-category[aria*="API7"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.08));
+  color: #2563eb;
+}
+
+.scenario-category[aria*="API8"] {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(234, 88, 12, 0.08));
+  color: #ea580c;
+}
+
+.scenario-category[aria*="API9"] {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(124, 58, 237, 0.08));
+  color: #7c3aed;
+}
+
+.scenario-category[aria*="API10"] {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(219, 39, 119, 0.08));
+  color: #db2777;
+}
+
+/* ─── Add Scenario Row ─── */
+.add-scenario-row {
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.add-scenario-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: not-allowed;
+  transition: all var(--transition-fast) ease;
+}
+
+.add-scenario-btn:disabled {
+  opacity: 0.6;
+}
+
+.add-scenario-btn svg {
+  flex-shrink: 0;
+}
+
 /* ─── Loading Skeleton ─── */
 .loading-pulse {
   display: flex;

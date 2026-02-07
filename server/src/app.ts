@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cors from "cors";
 import specRoutes from "./routes/spec.js";
 import providerRoutes from "./routes/provider.js";
+import analyzeRoutes from "./routes/analyze.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { validateSpecSize } from "./middleware/validation.js";
 import { loadLLMConfig, getProviderDisplayName } from "./config/llm.js";
@@ -71,6 +72,7 @@ app.use((req, _res, next) => {
 
 // API routes
 app.use("/api/provider", providerRoutes);
+app.use("/api/analyze", analyzeRoutes);
 app.use("/api", specRoutes);
 
 // 404 handler

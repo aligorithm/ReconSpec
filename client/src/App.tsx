@@ -3,6 +3,7 @@ import { MainLayout } from "./components/layout/MainLayout.js";
 import { ImportDropzone } from "./components/spec/ImportDropzone.js";
 import { SummaryCard } from "./components/spec/SummaryCard.js";
 import { TagGroup } from "./components/spec/TagGroup.js";
+import { AnalysisBar } from "./components/analysis/AnalysisBar.js";
 import "./styles/tokens.css";
 
 function App(): JSX.Element {
@@ -52,6 +53,7 @@ function App(): JSX.Element {
   return (
     <MainLayout showImport={false} onImportClick={() => {}}>
       <SummaryCard />
+      <AnalysisBar />
       <TagGroup />
     </MainLayout>
   );
