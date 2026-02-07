@@ -17,7 +17,7 @@ API security testing tool that analyzes OpenAPI specifications and identifies po
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- pnpm
 - LLM provider API key (OpenAI, Anthropic, or compatible)
 
 ### Installation
@@ -30,7 +30,7 @@ cd ReconSpec
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Set up environment variables:
@@ -54,11 +54,11 @@ Supported providers:
 ```bash
 # Terminal 1: Backend server
 cd server
-npm run dev
+pnpm run dev
 
 # Terminal 2: Frontend
 cd client
-npm run dev
+pnpm run dev
 ```
 
 5. Open http://localhost:5173 in your browser
