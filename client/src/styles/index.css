@@ -625,6 +625,21 @@
   margin-left: 4px;
 }
 
+.high-relevance-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin-left: 8px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.10));
+  color: #16a34a;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
 /* Category-specific badge colors */
 .vulnerability-category[aria*="API1"] {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));

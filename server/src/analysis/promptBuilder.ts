@@ -9,7 +9,7 @@ import { getKnowledgeBaseText } from "../knowledge/owasp/index.js";
 import { getCategoryDocs } from "../knowledge/owasp/docsLoader.js";
 
 /**
- * Sensitive property names that commonly indicate mass assignment vectors
+ * Sensitive property names that commonly indicate mass assignment/BOPLA (broken object property level authorisation) vectors
  * These are properties that could allow privilege escalation or unauthorized access
  */
 const SENSITIVE_PROPERTIES = [
@@ -60,11 +60,14 @@ You are a planning assistant, not a vulnerability scanner. The output you produc
 
 1. **Spec-only analysis**: Base your analysis ONLY on information present in the OpenAPI spec (paths, methods, parameters, schemas, auth requirements, responses). Do NOT speculate about implementation details, runtime behavior, or backend technology.
 
-2. **Relevance over quantity**: Only include vulnerabilities that have meaningful signals in the spec. If an endpoint has no observable characteristics suggesting a given OWASP category is relevant, omit it. Do NOT pad the results.
+2. **Identify testing opportunities**: Be permissive in suggesting potential test areas. If an OWASP category COULD be relevant based on the endpoint's characteristics (method, parameters, schema, auth), include it as a potential testing opportunity. It's better to suggest a test that turns out to be irrelevant than to miss a testing opportunity.
 
-3. **Concrete indicators**: Map vulnerabilities to observable signals in the spec (e.g., "path parameter named {userId} suggests direct object reference").
+3. **Prioritize by observable signals**: Use the relevance indicators in the OWASP category documentation as priority boosters. When strong indicators are present (e.g., specific field names, patterns, schema characteristics), assign higher relevance scores (70-100). When signals are weaker but the category is still worth testing, assign moderate scores (50-69).
 
-4. **Context-aware**: Consider the HTTP method, parameter types, auth requirements, and request/response schemas when assessing relevance.
+4. **Context-aware**: Consider the HTTP method, parameter types, auth requirements, and request/response schemas when assessing what to test. For example:
+   - ANY POST/PUT/PATCH with a request body is worth testing for BOPLA (mass assignment)
+   - Endpoints with path parameters like {userId}, {orderId} are worth testing for BOLA
+   - Authentication endpoints should be tested for authentication bypasses
 
 # Output Format
 
@@ -92,10 +95,12 @@ A single vulnerability MAY be relevant to multiple OWASP categories:
 # Scoring Guidelines
 
 - Relevance scores should range from 0-100
-- 90-100: Strong, obvious indicators (e.g., /users/{userId} for BOLA)
-- 70-89: Clear but not definitive signals
-- 50-69: Moderate relevance, worth investigating
-- Below 50: Weak signals, only include if genuinely relevant
+- 90-100: High priority - Strong, obvious indicators present (e.g., /users/{userId} for BOLA, request body with "role" field for BOPLA)
+- 70-89: High relevance - Clear signals that warrant priority testing
+- 50-69: Worth testing - Moderate relevance, include as exploratory test opportunities
+- Below 50: Optional - Only include if the category has some connection to the endpoint
+
+**Be inclusive**: When in doubt, include the category with a moderate score (50-69) rather than excluding it. Penetration testers can decide what to test, but they can only test what you suggest.
 
 ${getKnowledgeBaseText()}`;
 }
@@ -137,49 +142,68 @@ export function buildUserPrompt(endpoint: EndpointDetail): string {
     parts.push(`**Content-Type**: ${endpoint.requestBody.contentType}`);
 
     // Schema comparison for BOPLA detection
-    if (endpoint.requestBody.allSchemaProperties && endpoint.requestBody.allSchemaProperties.length > 0) {
-      const exposedProps = new Set(endpoint.requestBody.properties.map((p) => p.name));
-      const allProps = endpoint.requestBody.allSchemaProperties;
-      const hiddenProps = allProps.filter((p) => !exposedProps.has(p.name));
-      const hiddenSensitiveProps = hiddenProps.filter((p) =>
-        SENSITIVE_PROPERTIES.includes(p.name as any)
-      );
+    // Always show schema info when available - let LLM assess relevance
+    if (endpoint.requestBody.schemaRef) {
+      parts.push(`**Schema Reference**: ${endpoint.requestBody.schemaRef}`);
 
-      if (endpoint.requestBody.schemaRef) {
-        parts.push(`**Schema Reference**: ${endpoint.requestBody.schemaRef}`);
-      }
-
-      parts.push(`**Exposed Properties** (${endpoint.requestBody.properties.length} of ${allProps.length}):`);
-      endpoint.requestBody.properties.forEach((prop) => {
-        const required = prop.required ? " (required)" : "";
-        parts.push(
-          `- \`${prop.name}\` (${prop.type}${required}): ${
-            prop.description || "No description"
-          }`
+      // If we have the full schema definition, show comparison
+      if (endpoint.requestBody.allSchemaProperties && endpoint.requestBody.allSchemaProperties.length > 0) {
+        const exposedProps = new Set(endpoint.requestBody.properties.map((p) => p.name));
+        const allProps = endpoint.requestBody.allSchemaProperties;
+        const hiddenProps = allProps.filter((p) => !exposedProps.has(p.name));
+        const hiddenSensitiveProps = hiddenProps.filter((p) =>
+          SENSITIVE_PROPERTIES.includes(p.name as any)
         );
-      });
 
-      if (hiddenProps.length > 0) {
-        parts.push(`\n**Hidden Properties** (${hiddenProps.length} not exposed in this endpoint):`);
-        hiddenProps.forEach((prop) => {
-          const isSensitive = SENSITIVE_PROPERTIES.includes(prop.name as any);
-          const sensitiveTag = isSensitive ? " ⚠️ SENSITIVE" : "";
-          const required = prop.required ? " (required in schema)" : "";
+        parts.push(`**Exposed Properties** (${endpoint.requestBody.properties.length} of ${allProps.length}):`);
+        endpoint.requestBody.properties.forEach((prop) => {
+          const required = prop.required ? " (required)" : "";
           parts.push(
-            `- \`${prop.name}\` (${prop.type}${required})${sensitiveTag}: ${
+            `- \`${prop.name}\` (${prop.type}${required}): ${
               prop.description || "No description"
             }`
           );
         });
 
+        // Show hidden properties if any exist
+        if (hiddenProps.length > 0) {
+          parts.push(`\n**Hidden Properties** (${hiddenProps.length} not exposed in this endpoint):`);
+          hiddenProps.forEach((prop) => {
+            const isSensitive = SENSITIVE_PROPERTIES.includes(prop.name as any);
+            const sensitiveTag = isSensitive ? " ⚠️ SENSITIVE" : "";
+            const required = prop.required ? " (required in schema)" : "";
+            parts.push(
+              `- \`${prop.name}\` (${prop.type}${required})${sensitiveTag}: ${
+                prop.description || "No description"
+              }`
+            );
+          });
+        }
+
+        // Always show schema context for BOPLA assessment
+        // Note: Even if no hidden sensitive properties are detected in the schema,
+        // BOPLA may still be relevant if the endpoint accepts user-modifiable data
+        // that could influence privilege escalation (e.g., role, tier, status fields)
         if (hiddenSensitiveProps.length > 0) {
           parts.push(
-            `\n**⚠️ BOPLA Alert**: ${hiddenSensitiveProps.length} sensitive properties may be testable for mass assignment: ${hiddenSensitiveProps.map((p) => `\`${p.name}\``).join(", ")}`
+            `\n**Note**: Schema defines ${hiddenSensitiveProps.length} sensitive properties not exposed in this endpoint: ${hiddenSensitiveProps.map((p: { name: string }) => `\`${p.name}\``).join(", ")}`
           );
         }
+      } else {
+        // Schema reference exists but we couldn't extract the full definition
+        parts.push(`**Properties** (from schema reference):`);
+        endpoint.requestBody.properties.forEach((prop) => {
+          const required = prop.required ? " (required)" : "";
+          parts.push(
+            `- \`${prop.name}\` (${prop.type}${required}): ${
+              prop.description || "No description"
+            }`
+          );
+        });
+        parts.push(`\n**Note**: This endpoint references a schema definition. BOPLA testing may be relevant if the full schema includes additional properties not shown here.`);
       }
     } else {
-      // Standard display when no schema reference
+      // No schema reference - standard display
       parts.push(`**Properties**:`);
       endpoint.requestBody.properties.forEach((prop) => {
         const required = prop.required ? " (required)" : "";
@@ -415,49 +439,68 @@ export function buildDeepDiveUserPrompt(
     parts.push(`**Content-Type**: ${endpoint.requestBody.contentType}`);
 
     // Schema comparison for BOPLA detection
-    if (endpoint.requestBody.allSchemaProperties && endpoint.requestBody.allSchemaProperties.length > 0) {
-      const exposedProps = new Set(endpoint.requestBody.properties.map((p) => p.name));
-      const allProps = endpoint.requestBody.allSchemaProperties;
-      const hiddenProps = allProps.filter((p) => !exposedProps.has(p.name));
-      const hiddenSensitiveProps = hiddenProps.filter((p) =>
-        SENSITIVE_PROPERTIES.includes(p.name as any)
-      );
+    // Always show schema info when available - let LLM assess relevance
+    if (endpoint.requestBody.schemaRef) {
+      parts.push(`**Schema Reference**: ${endpoint.requestBody.schemaRef}`);
 
-      if (endpoint.requestBody.schemaRef) {
-        parts.push(`**Schema Reference**: ${endpoint.requestBody.schemaRef}`);
-      }
-
-      parts.push(`**Exposed Properties** (${endpoint.requestBody.properties.length} of ${allProps.length}):`);
-      endpoint.requestBody.properties.forEach((prop) => {
-        const required = prop.required ? " (required)" : "";
-        parts.push(
-          `- \`${prop.name}\` (${prop.type}${required}): ${
-            prop.description || "No description"
-          }`
+      // If we have the full schema definition, show comparison
+      if (endpoint.requestBody.allSchemaProperties && endpoint.requestBody.allSchemaProperties.length > 0) {
+        const exposedProps = new Set(endpoint.requestBody.properties.map((p) => p.name));
+        const allProps = endpoint.requestBody.allSchemaProperties;
+        const hiddenProps = allProps.filter((p) => !exposedProps.has(p.name));
+        const hiddenSensitiveProps = hiddenProps.filter((p) =>
+          SENSITIVE_PROPERTIES.includes(p.name as any)
         );
-      });
 
-      if (hiddenProps.length > 0) {
-        parts.push(`\n**Hidden Properties** (${hiddenProps.length} not exposed in this endpoint):`);
-        hiddenProps.forEach((prop) => {
-          const isSensitive = SENSITIVE_PROPERTIES.includes(prop.name as any);
-          const sensitiveTag = isSensitive ? " ⚠️ SENSITIVE" : "";
-          const required = prop.required ? " (required in schema)" : "";
+        parts.push(`**Exposed Properties** (${endpoint.requestBody.properties.length} of ${allProps.length}):`);
+        endpoint.requestBody.properties.forEach((prop) => {
+          const required = prop.required ? " (required)" : "";
           parts.push(
-            `- \`${prop.name}\` (${prop.type}${required})${sensitiveTag}: ${
+            `- \`${prop.name}\` (${prop.type}${required}): ${
               prop.description || "No description"
             }`
           );
         });
 
+        // Show hidden properties if any exist
+        if (hiddenProps.length > 0) {
+          parts.push(`\n**Hidden Properties** (${hiddenProps.length} not exposed in this endpoint):`);
+          hiddenProps.forEach((prop) => {
+            const isSensitive = SENSITIVE_PROPERTIES.includes(prop.name as any);
+            const sensitiveTag = isSensitive ? " ⚠️ SENSITIVE" : "";
+            const required = prop.required ? " (required in schema)" : "";
+            parts.push(
+              `- \`${prop.name}\` (${prop.type}${required})${sensitiveTag}: ${
+                prop.description || "No description"
+              }`
+            );
+          });
+        }
+
+        // Always show schema context for BOPLA assessment
+        // Note: Even if no hidden sensitive properties are detected in the schema,
+        // BOPLA may still be relevant if the endpoint accepts user-modifiable data
+        // that could influence privilege escalation (e.g., role, tier, status fields)
         if (hiddenSensitiveProps.length > 0) {
           parts.push(
-            `\n**⚠️ BOPLA Alert**: ${hiddenSensitiveProps.length} sensitive properties may be testable for mass assignment: ${hiddenSensitiveProps.map((p) => `\`${p.name}\``).join(", ")}`
+            `\n**Note**: Schema defines ${hiddenSensitiveProps.length} sensitive properties not exposed in this endpoint: ${hiddenSensitiveProps.map((p: { name: string }) => `\`${p.name}\``).join(", ")}`
           );
         }
+      } else {
+        // Schema reference exists but we couldn't extract the full definition
+        parts.push(`**Properties** (from schema reference):`);
+        endpoint.requestBody.properties.forEach((prop) => {
+          const required = prop.required ? " (required)" : "";
+          parts.push(
+            `- \`${prop.name}\` (${prop.type}${required}): ${
+              prop.description || "No description"
+            }`
+          );
+        });
+        parts.push(`\n**Note**: This endpoint references a schema definition. BOPLA testing may be relevant if the full schema includes additional properties not shown here.`);
       }
     } else {
-      // Standard display when no schema reference
+      // No schema reference - standard display
       parts.push(`**Properties**:`);
       endpoint.requestBody.properties.forEach((prop) => {
         const required = prop.required ? " (required)" : "";
