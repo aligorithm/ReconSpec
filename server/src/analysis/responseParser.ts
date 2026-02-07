@@ -4,20 +4,20 @@
  * Validates and parses LLM JSON responses.
  */
 
-import type { EndpointDetail, AttackScenario } from "@reconspec/shared";
+import type { EndpointDetail, PotentialVulnerability } from "@reconspec/shared";
 import { getAllCategoryIds } from "../knowledge/owasp/index.js";
 
 /**
  * Phase A LLM response schema
  */
 export interface PhaseAResponse {
-  scenarios: PhaseAScenario[];
+  vulnerabilities: PhaseAVulnerability[];
   endpointSummary: string;
 }
 
-export interface PhaseAScenario {
+export interface PhaseAVulnerability {
   name: string;
-  categoryId: string;
+  categories: string[];
   relevanceScore: number;
   affectedParams: string[];
   summary: string;
@@ -28,10 +28,10 @@ export interface PhaseAScenario {
  */
 export interface APISummaryResponse {
   overview: string;
-  riskCategories: RiskCategoryCount[];
+  testingCategories: TestingCategoryCount[];
 }
 
-export interface RiskCategoryCount {
+export interface TestingCategoryCount {
   categoryId: string;
   categoryName: string;
   count: number;
@@ -54,68 +54,79 @@ export function parsePhaseAResponse(
     const parsed = JSON.parse(cleanedJson) as PhaseAResponse;
 
     // Validate structure
-    if (!parsed.scenarios || !Array.isArray(parsed.scenarios)) {
-      return { success: false, error: "Missing or invalid scenarios array" };
+    if (!parsed.vulnerabilities || !Array.isArray(parsed.vulnerabilities)) {
+      return { success: false, error: "Missing or invalid vulnerabilities array" };
     }
 
     if (typeof parsed.endpointSummary !== "string") {
       return { success: false, error: "Missing or invalid endpointSummary" };
     }
 
-    // Validate each scenario
+    // Validate each vulnerability
     const validCategoryIds = getAllCategoryIds();
     const endpointParamNames = new Set([
       ...endpoint.parameters.map((p) => p.name),
       ...(endpoint.requestBody?.properties.map((f) => f.name) ?? []),
     ]);
 
-    for (let i = 0; i < parsed.scenarios.length; i++) {
-      const scenario = parsed.scenarios[i];
+    for (let i = 0; i < parsed.vulnerabilities.length; i++) {
+      const vuln = parsed.vulnerabilities[i];
 
       // Validate required fields
-      if (typeof scenario.name !== "string" || !scenario.name.trim()) {
+      if (typeof vuln.name !== "string" || !vuln.name.trim()) {
         return {
           success: false,
-          error: `Scenario ${i + 1}: missing or invalid name`,
+          error: `Vulnerability ${i + 1}: missing or invalid name`,
         };
       }
 
-      if (typeof scenario.categoryId !== "string") {
+      // Validate categories array
+      if (!Array.isArray(vuln.categories)) {
         return {
           success: false,
-          error: `Scenario ${i + 1}: missing or invalid categoryId`,
+          error: `Vulnerability ${i + 1}: missing or invalid categories array`,
         };
       }
 
-      // Validate categoryId is known
-      if (!validCategoryIds.includes(scenario.categoryId)) {
+      // Ensure at least one category
+      if (vuln.categories.length === 0) {
         return {
           success: false,
-          error: `Scenario ${i + 1}: unknown categoryId "${scenario.categoryId}"`,
+          error: `Vulnerability ${i + 1}: categories array cannot be empty`,
         };
+      }
+
+      // Validate each category ID is known
+      for (const catId of vuln.categories) {
+        if (!validCategoryIds.includes(catId)) {
+          return {
+            success: false,
+            error: `Vulnerability ${i + 1}: unknown categoryId "${catId}"`,
+          };
+        }
       }
 
       // Validate and clamp relevanceScore
-      if (typeof scenario.relevanceScore !== "number") {
-        scenario.relevanceScore = 50; // Default
+      if (typeof vuln.relevanceScore !== "number") {
+        vuln.relevanceScore = 50; // Default
       } else {
-        scenario.relevanceScore = Math.max(0, Math.min(100, scenario.relevanceScore));
+        vuln.relevanceScore = Math.max(0, Math.min(100, vuln.relevanceScore));
       }
 
       // Validate affectedParams is array
-      if (!Array.isArray(scenario.affectedParams)) {
-        scenario.affectedParams = [];
+      if (!Array.isArray(vuln.affectedParams)) {
+        vuln.affectedParams = [];
       }
 
       // Filter affectedParams to only include params that exist on the endpoint
-      scenario.affectedParams = scenario.affectedParams.filter((param) =>
+      vuln.affectedParams = vuln.affectedParams.filter((param) =>
         endpointParamNames.has(param)
       );
 
-      if (typeof scenario.summary !== "string" || !scenario.summary.trim()) {
+      if (typeof vuln.summary !== "string" || !vuln.summary.trim()) {
         return {
           success: false,
-          error: `Scenario ${i + 1}: missing or invalid summary`,
+          error: `Vulnerability ${i + 1}: missing or invalid summary`,
         };
       }
     }
@@ -149,14 +160,14 @@ export function parseAPISummaryResponse(
       return { success: false, error: "Missing or invalid overview" };
     }
 
-    if (!Array.isArray(parsed.riskCategories)) {
-      return { success: false, error: "Missing or invalid riskCategories array" };
+    if (!Array.isArray(parsed.testingCategories)) {
+      return { success: false, error: "Missing or invalid testingCategories array" };
     }
 
-    // Validate riskCategories
+    // Validate testingCategories
     const validCategoryIds = getAllCategoryIds();
-    for (let i = 0; i < parsed.riskCategories.length; i++) {
-      const cat = parsed.riskCategories[i];
+    for (let i = 0; i < parsed.testingCategories.length; i++) {
+      const cat = parsed.testingCategories[i];
 
       if (!cat) {
         return {
@@ -197,18 +208,18 @@ export function parseAPISummaryResponse(
 }
 
 /**
- * Convert PhaseAScenario to AttackScenario with timestamp
+ * Convert PhaseAVulnerability to PotentialVulnerability with timestamp
  */
-export function toAttackScenario(
-  phaseAScenario: PhaseAScenario,
+export function toPotentialVulnerability(
+  phaseAVuln: PhaseAVulnerability,
   index: number
-): AttackScenario {
+): PotentialVulnerability {
   return {
-    id: `scenario-${Date.now()}-${index}`,
-    name: phaseAScenario.name,
-    category: phaseAScenario.categoryId,
-    relevanceScore: phaseAScenario.relevanceScore,
-    affectedParams: phaseAScenario.affectedParams,
+    id: `vuln-${Date.now()}-${index}`,
+    name: phaseAVuln.name,
+    categories: phaseAVuln.categories,
+    relevanceScore: phaseAVuln.relevanceScore,
+    affectedParams: phaseAVuln.affectedParams,
     deepDive: null, // Populated in Phase B
   };
 }
@@ -216,21 +227,18 @@ export function toAttackScenario(
 /**
  * Phase B Deep Dive response schema
  */
+export interface TestScenario {
+  context: string;
+  legitimateRequest: string;
+  maliciousPayload: string;
+  explanation: string;
+}
+
 export interface DeepDiveResponse {
   overview: string;
-  steps: DeepDiveStep[];
-  expectedResponses: ExpectedResponse[];
-  samplePayloads: PayloadExample[];
-}
-
-export interface DeepDiveStep {
-  description: string;
-  parameterFocus: string[];
-}
-
-export interface ExpectedResponse {
-  condition: string;
-  indicators: string[];
+  testScenarios: TestScenario[];
+  tools: string[];
+  samplePayload: PayloadExample | null;
 }
 
 export interface PayloadExample {
@@ -261,171 +269,88 @@ export function parseDeepDiveResponse(
       return { success: false, error: "Missing or invalid overview" };
     }
 
-    // Validate steps
-    if (!Array.isArray(parsed.steps)) {
-      return { success: false, error: "Missing or invalid steps array" };
+    // Validate testScenarios array
+    if (!Array.isArray(parsed.testScenarios)) {
+      return { success: false, error: "Missing or invalid testScenarios array" };
     }
 
-    // Get valid parameter names
-    const validParamNames = new Set([
-      ...endpoint.parameters.map((p) => p.name),
-      ...(endpoint.requestBody?.properties.map((f) => f.name) ?? []),
-    ]);
+    for (let i = 0; i < parsed.testScenarios.length; i++) {
+      const scenario = parsed.testScenarios[i];
 
-    for (let i = 0; i < parsed.steps.length; i++) {
-      const step = parsed.steps[i];
-
-      if (typeof step.description !== "string" || !step.description.trim()) {
+      // Validate context
+      if (typeof scenario.context !== "string" || !scenario.context.trim()) {
         return {
           success: false,
-          error: `Step ${i + 1}: missing or invalid description`,
+          error: `Scenario ${i + 1}: missing or invalid context`,
         };
       }
 
-      if (!Array.isArray(step.parameterFocus)) {
+      // Validate legitimateRequest
+      if (typeof scenario.legitimateRequest !== "string" || !scenario.legitimateRequest.trim()) {
         return {
           success: false,
-          error: `Step ${i + 1}: missing or invalid parameterFocus`,
+          error: `Scenario ${i + 1}: missing or invalid legitimateRequest`,
         };
       }
 
-      // Validate that all parameterFocus values exist on the endpoint
-      step.parameterFocus = step.parameterFocus.filter((param) =>
-        validParamNames.has(param)
-      );
-    }
-
-    // Validate expectedResponses
-    if (!Array.isArray(parsed.expectedResponses)) {
-      return { success: false, error: "Missing or invalid expectedResponses array" };
-    }
-
-    for (let i = 0; i < parsed.expectedResponses.length; i++) {
-      const resp = parsed.expectedResponses[i];
-
-      if (typeof resp.condition !== "string" || !resp.condition.trim()) {
+      // Validate maliciousPayload
+      if (typeof scenario.maliciousPayload !== "string" || !scenario.maliciousPayload.trim()) {
         return {
           success: false,
-          error: `Expected response ${i + 1}: missing or invalid condition`,
+          error: `Scenario ${i + 1}: missing or invalid maliciousPayload`,
         };
       }
 
-      if (!Array.isArray(resp.indicators)) {
+      // Validate explanation
+      if (typeof scenario.explanation !== "string" || !scenario.explanation.trim()) {
         return {
           success: false,
-          error: `Expected response ${i + 1}: missing or invalid indicators`,
+          error: `Scenario ${i + 1}: missing or invalid explanation`,
         };
       }
     }
 
-    // Validate samplePayloads
-    if (!Array.isArray(parsed.samplePayloads)) {
-      return { success: false, error: "Missing or invalid samplePayloads array" };
+    // Validate tools array
+    if (!Array.isArray(parsed.tools)) {
+      parsed.tools = [];
     }
 
-    for (let i = 0; i < parsed.samplePayloads.length; i++) {
-      const payload = parsed.samplePayloads[i];
+    // Sanitize tool names
+    parsed.tools = parsed.tools
+      .filter((t) => typeof t === "string" && t.trim())
+      .map((t) => t.trim());
+
+    // Validate samplePayload (optional)
+    if (parsed.samplePayload !== null && parsed.samplePayload !== undefined) {
+      if (typeof parsed.samplePayload !== "object") {
+        return { success: false, error: "samplePayload must be an object or null" };
+      }
+
+      const payload = parsed.samplePayload;
 
       if (typeof payload.label !== "string" || !payload.label.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid label`,
-        };
+        return { success: false, error: "samplePayload: missing or invalid label" };
       }
 
       if (typeof payload.contentType !== "string" || !payload.contentType.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid contentType`,
-        };
+        return { success: false, error: "samplePayload: missing or invalid contentType" };
       }
 
       if (typeof payload.body !== "string" || !payload.body.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid body`,
-        };
+        return { success: false, error: "samplePayload: missing or invalid body" };
       }
 
       if (typeof payload.description !== "string" || !payload.description.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid description`,
-        };
+        return { success: false, error: "samplePayload: missing or invalid description" };
       }
 
       // Sanitize body to prevent HTML injection in frontend
-      // Replace < with &lt;, > with &gt;, but preserve JSON structure
       payload.body = payload.body
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
     }
 
     return { success: true, data: parsed };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to parse JSON",
-    };
-  }
-}
-
-/**
- * Parse payload generation response
- */
-export function parsePayloadGenerationResponse(
-  jsonResponse: string
-): { success: boolean; data?: PayloadExample[]; error?: string } {
-  try {
-    const cleanedJson = jsonResponse
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
-    const parsed = JSON.parse(cleanedJson) as { payloads: PayloadExample[] };
-
-    if (!Array.isArray(parsed.payloads)) {
-      return { success: false, error: "Missing or invalid payloads array" };
-    }
-
-    for (let i = 0; i < parsed.payloads.length; i++) {
-      const payload = parsed.payloads[i];
-
-      if (typeof payload.label !== "string" || !payload.label.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid label`,
-        };
-      }
-
-      if (typeof payload.contentType !== "string" || !payload.contentType.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid contentType`,
-        };
-      }
-
-      if (typeof payload.body !== "string" || !payload.body.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid body`,
-        };
-      }
-
-      if (typeof payload.description !== "string" || !payload.description.trim()) {
-        return {
-          success: false,
-          error: `Payload ${i + 1}: missing or invalid description`,
-        };
-      }
-
-      // Sanitize body
-      payload.body = payload.body
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-    }
-
-    return { success: true, data: parsed.payloads };
   } catch (error) {
     return {
       success: false,

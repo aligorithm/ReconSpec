@@ -79,7 +79,7 @@ const AUTHORIZATION_TECHNIQUES: TestingTechnique[] = [
       "Error messages revealing filesystem structure",
       "Unexpected redirect behavior",
     ],
-    toolSuggestions: ["Burp Repeater", "curl with URL encoding", "Postman"],
+    toolSuggestions: ["Burp Repeater", "curl with URL encoding", "Postman", "Bruno"],
   },
   {
     id: "bola-property-manipulation",
@@ -98,7 +98,7 @@ const AUTHORIZATION_TECHNIQUES: TestingTechnique[] = [
       "Objects created with elevated privileges",
       "Privilege escalation reflected in subsequent GET requests",
     ],
-    toolSuggestions: ["Burp Suite", "OWASP ZAP", "Postman with pre-request scripts"],
+    toolSuggestions: ["Burp Suite", "ZAP", "Postman or Bruno with pre-request scripts"],
   },
   {
     id: "bfla-method-enumeration",
@@ -117,7 +117,7 @@ const AUTHORIZATION_TECHNIQUES: TestingTechnique[] = [
       "Different error messages revealing routing logic",
       "OPTIONS revealing allowed methods that shouldn't be permitted",
     ],
-    toolSuggestions: ["Burp Repeater", "curl -X", "Postman"],
+    toolSuggestions: ["Burp Repeater", "curl -X", "Postman", "Bruno"],
   },
   {
     id: "bfla-path-variation",
@@ -201,7 +201,7 @@ const AUTHENTICATION_TECHNIQUES: TestingTechnique[] = [
       "Session token doesn't change after privilege escalation",
       "Multiple concurrent sessions allowed without limit",
     ],
-    toolSuggestions: ["Burp Suite", "Postman", "browser dev tools"],
+    toolSuggestions: ["Burp Suite", "Postman", "Bruno", "browser dev tools"],
   },
 ];
 
@@ -245,7 +245,7 @@ const INJECTION_TECHNIQUES: TestingTechnique[] = [
       "Error messages revealing database type",
       "Different responses for successful vs failed injections",
     ],
-    toolSuggestions: ["NoSQLMap", "Burp Intruder with NoSQL payloads", "Postman"],
+    toolSuggestions: ["NoSQLMap", "Burp Intruder with NoSQL payloads", "Postman", "Bruno"],
   },
   {
     id: "injection-command",
@@ -352,7 +352,7 @@ const INPUT_VALIDATION_TECHNIQUES: TestingTechnique[] = [
       "Privilege escalation via property manipulation",
       "Objects created with overridden system fields",
     ],
-    toolSuggestions: ["Postman", "Burp Suite"],
+    toolSuggestions: ["Postman", "Burp Suite", "Bruno"],
   },
 ];
 

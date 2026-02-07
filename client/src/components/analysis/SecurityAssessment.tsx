@@ -1,10 +1,10 @@
 import type { SecurityAssessment, EndpointDetail } from "@reconspec/shared";
-import { AttackScenarioRow } from "./AttackScenarioRow.js";
+import { VulnerabilityRow } from "./VulnerabilityRow.js";
 
 interface SecurityAssessmentProps {
   endpoint: EndpointDetail;
   assessment: SecurityAssessment;
-  onDeepDive: (endpointId: string, scenarioId: string) => Promise<void>;
+  onDeepDive: (endpointId: string, vulnId: string) => Promise<void>;
 }
 
 export function SecurityAssessmentPanel({
@@ -12,7 +12,7 @@ export function SecurityAssessmentPanel({
   assessment,
   onDeepDive,
 }: SecurityAssessmentProps): JSX.Element {
-  const scenarioCount = assessment.scenarios.length;
+  const vulnCount = assessment.vulnerabilities.length;
 
   return (
     <div
@@ -33,12 +33,12 @@ export function SecurityAssessmentPanel({
           </svg>
           Security Assessment
         </div>
-        <span className="scenario-count-label">
-          {scenarioCount} attack scenario{scenarioCount !== 1 ? "s" : ""}
+        <span className="vulnerability-count-label">
+          {vulnCount} potential vulnerabilit{vulnCount !== 1 ? "ies" : "y"}
         </span>
       </div>
 
-      {scenarioCount === 0 ? (
+      {vulnCount === 0 ? (
         <div
           style={{
             padding: "20px 16px",
@@ -47,25 +47,25 @@ export function SecurityAssessmentPanel({
             fontSize: "13px",
           }}
         >
-          No attack scenarios identified for this endpoint.
+          No vulnerabilities identified for this endpoint.
         </div>
       ) : (
         <>
-          {assessment.scenarios.map((scenario, index) => (
-            <AttackScenarioRow
-              key={scenario.id}
-              scenario={scenario}
+          {assessment.vulnerabilities.map((vuln, index) => (
+            <VulnerabilityRow
+              key={vuln.id}
+              vuln={vuln}
               index={index}
               endpointId={endpoint.id}
               onDeepDive={onDeepDive}
             />
           ))}
 
-          <div className="add-scenario-row">
+          <div className="add-vulnerability-row">
             <button
-              className="add-scenario-btn"
+              className="add-vulnerability-btn"
               disabled
-              aria-label="Add a custom attack scenario (coming soon)"
+              aria-label="Add a custom vulnerability (coming soon)"
             >
               <svg
                 width="12"
@@ -78,7 +78,7 @@ export function SecurityAssessmentPanel({
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              Add Custom Scenario
+              Add Custom Vulnerability
             </button>
           </div>
         </>

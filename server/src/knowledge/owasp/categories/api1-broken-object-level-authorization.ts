@@ -3,10 +3,10 @@ import type { OWASPCategory } from "../types.js";
 export const API1: OWASPCategory = {
   id: "API1",
   name: "Broken Object Level Authorization",
-  shortName: "Broken Object Auth",
+  shortName: "BOLA",
   description:
-    "APIs tend to handle object-level authorization by checking that the logged-in user has permission to access the object. However, developers often forget to enforce this check, leading to unauthorized access to data belonging to other users.",
-  cwe: ["CWE-285", "CWE-862", "CWE-863"],
+    "Attackers can exploit API endpoints that are vulnerable to broken object-level authorization by manipulating the ID of an object that is sent within the request. Object IDs can be anything from sequential integers, UUIDs, or generic strings. Regardless of the data type, they are easy to identify in the request target (path or query string parameters), request headers, or even as part of the request payload.",
+  cwe: ["CWE-285", "CWE-639"],
   relevanceIndicators: [
     "Path parameters with names like id, userId, orderId, petId, accountId suggesting direct object references",
     "GET/PUT/DELETE/PATCH endpoints with resource identifiers in the path",

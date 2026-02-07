@@ -1,4 +1,4 @@
-import type { ParsedSpec, ProviderStatus, EndpointDetail } from "@reconspec/shared";
+import type { ParsedSpec, ProviderStatus, EndpointDetail, SecurityAssessment } from "@reconspec/shared";
 
 const API_BASE_URL = "/api";
 
@@ -15,7 +15,7 @@ interface ApiError {
  */
 export type AnalysisProgressEvent =
   | { type: "progress"; data: { completed: number; total: number; currentEndpoint: string } }
-  | { type: "endpoint_complete"; data: { endpointId: string; scenarioCount: number } }
+  | { type: "endpoint_complete"; data: { endpointId: string; assessment: SecurityAssessment } }
   | { type: "summary_complete"; data: APISummary }
   | { type: "complete"; data: { totalScenarios: number; totalEndpoints: number; apiSummary?: APISummary; failedEndpoints?: number } }
   | { type: "error"; data: { endpointId: string; error: string } };
@@ -25,10 +25,10 @@ export type AnalysisProgressEvent =
  */
 export interface APISummary {
   overview: string;
-  riskCategories: RiskCategoryCount[];
+  testingCategories: TestingCategoryCount[];
 }
 
-export interface RiskCategoryCount {
+export interface TestingCategoryCount {
   categoryId: string;
   categoryName: string;
   count: number;
@@ -208,18 +208,18 @@ export function analyzeSpec(
 }
 
 /**
- * Generate a deep dive for a specific attack scenario
+ * Generate a deep dive for a specific vulnerability
  */
 export async function generateDeepDive(
   endpointId: string,
-  scenarioId: string
+  vulnId: string
 ): Promise<any> {
-  console.log('[api] generateDeepDive called', { endpointId, scenarioId });
+  console.log('[api] generateDeepDive called', { endpointId, vulnId });
 
   const response = await fetch(`${API_BASE_URL}/analyze/deep-dive`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ endpointId, scenarioId }),
+    body: JSON.stringify({ endpointId, vulnId }),
   });
 
   console.log('[api] generateDeepDive response status:', response.status);
@@ -233,27 +233,5 @@ export async function generateDeepDive(
   const data = await response.json();
   console.log('[api] generateDeepDive success, data:', data);
   return data;
-}
-
-/**
- * Generate additional payloads for a scenario
- */
-export async function generateAdditionalPayloads(
-  endpointId: string,
-  scenarioId: string,
-  existingPayloads: string[]
-): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/analyze/generate-payloads`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ endpointId, scenarioId, existingPayloads }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to generate payloads");
-  }
-
-  return response.json();
 }
 

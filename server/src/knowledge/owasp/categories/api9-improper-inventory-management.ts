@@ -3,10 +3,10 @@ import type { OWASPCategory } from "../types.js";
 export const API9: OWASPCategory = {
   id: "API9",
   name: "Improper Inventory Management",
-  shortName: "Inventory Mgmt",
+  shortName: "Inventory",
   description:
-    "APIs have different versions, and older versions may be deprecated but still accessible. Improper inventory management allows attackers to exploit known vulnerabilities in older API versions or abuse administrative endpoints that should not be public.",
-  cwe: ["CWE-284", "CWE-215"],
+    "The sprawled and connected nature of APIs and modern applications brings new challenges. Running multiple versions of an API requires additional management resources and expands the attack surface. Threat agents may exploit deprecated endpoints available in old API versions to get access to administrative functions or exploit known vulnerabilities.",
+  cwe: ["CWE-1059"],
   relevanceIndicators: [
     "Multiple API versions accessible simultaneously (/v1/, /v2/, /v3/)",
     "Deprecated endpoints marked but still exposed in the spec",

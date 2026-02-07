@@ -5,8 +5,8 @@ export const API5: OWASPCategory = {
   name: "Broken Function Level Authorization",
   shortName: "Function Auth",
   description:
-    "This vulnerability allows attackers to access functionality they should not be able to reach. It occurs when APIs fail to verify that the user has permission to invoke specific functions or operations, not just access specific objects.",
-  cwe: ["CWE-285", "CWE-863"],
+    "Exploitation requires the attacker to send legitimate API calls to an API endpoint that they should not have access to as anonymous users or regular, non-privileged users. Such flaws allow attackers to access unauthorized functionality. Administrative functions are key targets and may lead to data disclosure, data loss, or data corruption.",
+  cwe: ["CWE-285"],
   relevanceIndicators: [
     "Admin-only endpoints without visible role checks in the spec",
     "Endpoints with paths containing /admin, /manage, /config, /system, /control",

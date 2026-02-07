@@ -3,14 +3,13 @@
  *
  * POST /api/analyze - Trigger Phase A analysis with SSE streaming
  * GET /api/analyze/status - Get analysis status
- * POST /api/analyze/deep-dive - Generate deep dive for a scenario
- * POST /api/analyze/generate-payloads - Generate additional payloads
+ * POST /api/analyze/deep-dive - Generate deep dive for a vulnerability
  */
 
 import { Router, Request, Response } from "express";
 import type { ParsedSpec } from "@reconspec/shared";
 import { asyncHandler } from "../middleware/errorHandler.js";
-import { analyzeSpec, generateDeepDive, generateAdditionalPayloads } from "../analysis/engine.js";
+import { analyzeSpec, generateDeepDive } from "../analysis/engine.js";
 
 const router = Router();
 
@@ -148,7 +147,7 @@ router.get(
 /**
  * POST /api/analyze/deep-dive
  *
- * Generates a deep dive analysis for a specific attack scenario.
+ * Generates a deep dive analysis for a specific vulnerability.
  */
 router.post(
   "/deep-dive",
@@ -161,11 +160,11 @@ router.post(
       return;
     }
 
-    const { endpointId, scenarioId } = req.body;
+    const { endpointId, vulnId } = req.body;
 
-    if (!endpointId || !scenarioId) {
+    if (!endpointId || !vulnId) {
       res.status(400).json({
-        error: "Missing required fields: endpointId and scenarioId",
+        error: "Missing required fields: endpointId and vulnId",
       });
       return;
     }
@@ -179,7 +178,7 @@ router.post(
       return;
     }
 
-    const result = await generateDeepDive(gateway, spec, endpointId, scenarioId);
+    const result = await generateDeepDive(gateway, spec, endpointId, vulnId);
 
     if (!result.success || !result.data) {
       res.status(500).json({
@@ -189,59 +188,6 @@ router.post(
     }
 
     res.json(result.data);
-  })
-);
-
-/**
- * POST /api/analyze/generate-payloads
- *
- * Generates additional payloads for a specific attack scenario.
- */
-router.post(
-  "/generate-payloads",
-  asyncHandler(async (req: Request, res: Response) => {
-    const gateway = req.app.locals.llmGateway;
-    if (!gateway) {
-      res.status(400).json({
-        error: "No LLM provider configured. Set LLM_PROVIDER and LLM_API_KEY in .env",
-      });
-      return;
-    }
-
-    const { endpointId, scenarioId, existingPayloads } = req.body;
-
-    if (!endpointId || !scenarioId || !Array.isArray(existingPayloads)) {
-      res.status(400).json({
-        error: "Missing required fields: endpointId, scenarioId, existingPayloads",
-      });
-      return;
-    }
-
-    // Get the spec from session
-    const spec = req.app.locals.currentSpec as ParsedSpec | undefined;
-    if (!spec) {
-      res.status(404).json({
-        error: "No spec found. Please run an analysis first.",
-      });
-      return;
-    }
-
-    const result = await generateAdditionalPayloads(
-      gateway,
-      spec,
-      endpointId,
-      scenarioId,
-      existingPayloads
-    );
-
-    if (!result.success || !result.data) {
-      res.status(500).json({
-        error: result.error || "Failed to generate payloads",
-      });
-      return;
-    }
-
-    res.json({ payloads: result.data });
   })
 );
 

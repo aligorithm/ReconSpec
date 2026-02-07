@@ -4,10 +4,9 @@
  * Constructs prompts for the LLM to analyze endpoints against the OWASP Top 10.
  */
 
-import type { EndpointDetail, AttackScenario } from "@reconspec/shared";
+import type { EndpointDetail, PotentialVulnerability } from "@reconspec/shared";
 import { getKnowledgeBaseText } from "../knowledge/owasp/index.js";
-import { getTechniquesPromptText } from "../knowledge/techniques/index.js";
-import { getPayloadsPromptText } from "../knowledge/payloads/index.js";
+import { getCategoryDocs } from "../knowledge/owasp/docsLoader.js";
 
 /**
  * Build the system prompt for Phase A analysis
@@ -23,9 +22,9 @@ You are a planning assistant, not a vulnerability scanner. The output you produc
 
 1. **Spec-only analysis**: Base your analysis ONLY on information present in the OpenAPI spec (paths, methods, parameters, schemas, auth requirements, responses). Do NOT speculate about implementation details, runtime behavior, or backend technology.
 
-2. **Relevance over quantity**: Only include attack scenarios that have meaningful signals in the spec. If an endpoint has no observable characteristics suggesting a given OWASP category is relevant, omit it. Do NOT pad the results.
+2. **Relevance over quantity**: Only include vulnerabilities that have meaningful signals in the spec. If an endpoint has no observable characteristics suggesting a given OWASP category is relevant, omit it. Do NOT pad the results.
 
-3. **Concrete indicators**: Map scenarios to observable signals in the spec (e.g., "path parameter named {userId} suggests direct object reference").
+3. **Concrete indicators**: Map vulnerabilities to observable signals in the spec (e.g., "path parameter named {userId} suggests direct object reference").
 
 4. **Context-aware**: Consider the HTTP method, parameter types, auth requirements, and request/response schemas when assessing relevance.
 
@@ -33,17 +32,24 @@ You are a planning assistant, not a vulnerability scanner. The output you produc
 
 Return ONLY a JSON object with this structure:
 {
-  "scenarios": [
+  "vulnerabilities": [
     {
-      "name": "Brief descriptive attack name",
-      "categoryId": "API1",
+      "name": "Brief descriptive vulnerability name",
+      "categories": ["API2", "API8"],
       "relevanceScore": 85,
-      "affectedParams": ["userId", "petId"],
+      "affectedParams": ["userId", "password"],
       "summary": "One-sentence explanation of why this is relevant"
     }
   ],
   "endpointSummary": "One-sentence summary of the endpoint's risk profile"
 }
+
+# Multiple Categories Guidance
+
+A single vulnerability MAY be relevant to multiple OWASP categories:
+- A POST /login endpoint could flag both API2 (Broken Authentication) and API8 (Security Misconfiguration) if it shows indicators for both
+- Use multiple categories when the same parameter or endpoint shows signals for different risk categories
+- Do NOT force multiple categories - only use when genuinely relevant
 
 # Scoring Guidelines
 
@@ -123,7 +129,7 @@ export function buildUserPrompt(endpoint: EndpointDetail): string {
 
   parts.push(`\n---`);
   parts.push(
-    `\nAnalyze this endpoint and return ONLY a JSON object with relevant attack scenarios. If no scenarios are relevant, return an empty scenarios array.`
+    `\nAnalyze this endpoint and return ONLY a JSON object with relevant potential vulnerabilities. If no vulnerabilities are relevant, return an empty vulnerabilities array.`
   );
 
   return parts.join("\n");
@@ -138,119 +144,165 @@ export function buildSummaryPrompt(
   endpointSummaries: Array<{
     method: string;
     path: string;
-    scenarios: Array<{ name: string; categoryId: string }>;
+    vulnerabilities: Array<{ name: string; categories: string[] }>;
   }>,
-  totalScenarios: number,
+  totalVulnerabilities: number,
   totalEndpoints: number
 ): string {
-  const condensedScenarios = endpointSummaries
-    .filter((ep) => ep.scenarios.length > 0)
+  const condensedVulns = endpointSummaries
+    .filter((ep) => ep.vulnerabilities.length > 0)
     .map(
       (ep) =>
-        `- ${ep.method.toUpperCase()} ${ep.path}: ${ep.scenarios.length} scenarios (${ep.scenarios.map((s) => s.categoryId).join(", ")})`
+        `- ${ep.method.toUpperCase()} ${ep.path}: ${ep.vulnerabilities.length} potential test areas (${ep.vulnerabilities.map((v) => v.categories.join(",")).join(", ")})`
     )
     .join("\n");
 
-  return `You are an API security analyst. Analyze the following API security assessment results and provide a comprehensive summary.
+  return `You are an API security testing strategist. Your role is to analyze API specifications and recommend testing priorities—NOT to claim vulnerabilities have been found.
+
+# Critical Context
+
+This is a **testing strategy aid**, not a vulnerability scanner. The "potential vulnerabilities" listed are areas worth testing based on OpenAPI spec analysis, not confirmed security issues.
 
 # API Information
 **Title**: ${specTitle}
 **Description**: ${specDescription || "No description provided"}
 
-# Assessment Results
+# Analysis Results
 **Total Endpoints**: ${totalEndpoints}
-**Total Attack Scenarios**: ${totalScenarios}
+**Potential Testing Areas**: ${totalVulnerabilities}
 
-# Endpoint Breakdown
-${condensedScenarios || "No scenarios identified."}
+# Endpoints with Suggested Test Areas
+${condensedVulns || "No specific test areas identified."}
 
 # Your Task
 
-Provide a JSON response with:
+Provide a JSON response that guides testing strategy:
+
 {
-  "overview": "2-3 paragraph prose summary of the API's overall security posture. Highlight key areas of concern, patterns across endpoints, and general recommendations.",
-  "riskCategories": [
+  "overview": "A 2-3 paragraph summary that covers: (1) What this API does based on its endpoints and functionality, (2) Recommended testing strategy priorities—which areas to test first and why based on the identified patterns, (3) High-level testing approach suggestions. Use language like 'testing should prioritize', 'worth investigating', 'consider testing for', 'may benefit from'.",
+  "testingCategories": [
     {"categoryId": "API1", "categoryName": "Broken Object Level Authorization", "count": 8}
   ]
 }
 
-The riskCategories array should list all OWASP categories that appear across scenarios, sorted by count descending.`;
+The testingCategories array should list OWASP categories that appear across the analysis, sorted by count descending. These represent areas where testing effort should be focused.
+
+# Language Guidelines
+
+- Use "potential test areas", "testing priorities", "worth investigating"
+- AVOID: "vulnerabilities identified", "security issues", "risks found", "concerning"
+- Focus on WHAT to test, not WHAT is wrong
+- Emphasize this is planning guidance for manual testing`;
 }
 
 /**
  * Build the system prompt for Phase B deep dive
  */
-export function buildDeepDiveSystemPrompt(): string {
-  return `You are an API security testing advisor providing detailed, actionable testing guidance for a specific attack scenario.
+export function buildDeepDiveSystemPrompt(categoryIds: string[]): string {
+  const docsContent = getCategoryDocs(categoryIds);
+
+  return `You are an API security testing advisor providing testing guidance for a POTENTIAL vulnerability.
 
 # Your Role
 
-You are expanding on an initial security assessment to provide step-by-step testing procedures that a penetration tester can follow directly. Your guidance should be practical, specific to the endpoint being tested, and include concrete examples.
+You are expanding on an initial security assessment to provide practical testing guidance. Your guidance should be specific to the endpoint being tested and based on the POTENTIAL vulnerability identified.
 
-# Key Principles
+# Critical: "Potential" Not "Confirmed"
 
-1. **Be Specific**: Reference actual parameter names, field types, and the endpoint's authentication requirements in your testing steps. Do not provide generic advice.
+**IMPORTANT**: All findings represent POTENTIAL vulnerabilities for testing purposes, NOT confirmed risks. You are identifying attack paths worth investigating, not detecting actual vulnerabilities. Use language that reflects this:
 
-2. **Actionable Steps**: Each step should be a clear instruction that can be executed with tools like curl, Postman, or Burp Suite.
+- "This MAY be vulnerable if..."
+- "POTENTIAL attack vector..."
+- "Could allow an attacker to..."
+- "Worth testing for..."
+- "Suggests the possibility of..."
 
-3. **Realistic Payloads**: Provide payload examples that match the endpoint's content type and schema. If the endpoint accepts JSON, provide JSON payloads. If it accepts form data, provide form-encoded examples.
+Do NOT use definitive language like "is vulnerable", "allows attackers", "can be exploited".
 
-4. **Observation Guidance**: Explain what to look for in responses to determine if the test was successful or if the vulnerability exists.
+# CRITICAL: Use Actual Endpoint Details
 
-5. **Tool-Agnostic**: Steps should work with any HTTP client, but mention relevant tools when appropriate.
+**DO NOT copy generic examples from OWASP documentation.**
+
+You MUST create scenarios specific to the ACTUAL endpoint being tested:
+
+1. **Use the real endpoint path** (e.g., if testing POST /api/users/{userId}/settings, reference that exact path)
+2. **Use actual parameter names** from the endpoint (e.g., if the endpoint has "role", "isAdmin", "subscriptionTier" parameters, use THOSE in your payloads)
+3. **Match the API's domain** (e.g., if it's a package management API, use package-related context; if it's an e-commerce API, use shopping context)
+4. **Reference the actual request body structure** (if the endpoint expects specific JSON fields, your examples must match)
+
+**WRONG**: Generic marketplace/hotel/booking examples copied from OWASP docs
+**RIGHT**: Scenarios using the actual endpoint's parameters, paths, and business domain
+
+${docsContent ? `
+# OWASP Documentation Reference
+
+The following sections from OWASP API Security Top 10 documentation provide context for the attack patterns and testing techniques. Adapt these concepts to the specific endpoint being tested—DO NOT copy the examples verbatim.
+
+${docsContent}
+` : ""}
 
 # Output Format
 
 Return ONLY a JSON object with this structure:
 {
-  "overview": "2-3 sentences explaining what this test targets, why it's relevant to this specific endpoint, and what the attacker could achieve.",
-  "steps": [
+  "overview": "2-3 sentences explaining why this POTENTIAL vulnerability was flagged for this specific endpoint, referencing actual parameters and the endpoint's purpose.",
+  "testScenarios": [
     {
-      "description": "Clear instruction for this testing step",
-      "parameterFocus": ["paramName1", "paramName2"]
+      "context": "Business context relevant to THIS API's domain. If it's a payment API, use payment context. If it's a user management API, use user management context.",
+      "legitimateRequest": "Example using the ACTUAL endpoint path and real parameter names. Show normal expected usage.",
+      "maliciousPayload": "Example exploiting the ACTUAL parameters from this endpoint. Use real field names that exist in the schema.",
+      "explanation": "Why this specific test on THIS endpoint could demonstrate the vulnerability. Reference the actual endpoint details."
     }
   ],
-  "expectedResponses": [
-    {
-      "condition": "If vulnerable to [specific vulnerability type]",
-      "indicators": [
-        "What to observe in status codes",
-        "What to observe in response body",
-        "Timing patterns to look for"
-      ]
-    }
-  ],
-  "samplePayloads": [
-    {
-      "label": "Short descriptor like 'SQL injection in name field'",
-      "contentType": "application/json | application/x-www-form-urlencoded | text/plain",
-      "body": "The full request body or parameter value with malicious payload",
-      "description": "What this specific payload tests for"
-    }
-  ]
+  "tools": ["Burp Suite", "ZAP", "Postman", "Bruno", "curl"],
+  "samplePayload": {
+    "label": "Short descriptor",
+    "contentType": "application/json",
+    "body": "A single example request body using the ACTUAL schema from this endpoint",
+    "description": "What this payload tests for"
+  }
 }
+
+# Scenario Requirements
+
+- ALL scenarios must use the ACTUAL endpoint path provided in the user prompt
+- ALL payloads must use REAL parameter names from the endpoint schema
+- Context must match the API's business domain (inferred from endpoint path/description)
+- DO NOT use unrelated examples like hotels, marketplaces, or social media unless that's what this API actually does
+- If you can't create a relevant scenario for this specific endpoint, create fewer scenarios (2 minimum) rather than copying generic examples
 
 # Important Notes
 
-- All parameter names in parameterFocus must exist in the endpoint's parameters or request body schema
-- Sample payloads must use the correct content type for the endpoint
-- Payload values should be properly escaped for JSON (use \\\\ for backslashes in strings)
-- Include 3-6 sample payloads covering different variations
-- Steps should be ordered logically (reconnaissance -> testing -> verification)`;
+- Provide 2-4 test scenarios that are SPECIFIC to this endpoint
+- Each scenario should tell a complete story using real endpoint details
+- Suggest 3-5 relevant testing tools
+- samplePayload is OPTIONAL - set to null if not applicable
+- If provided, samplePayload must match the endpoint's actual content type
+- Overview should explain WHY this was flagged based on the OpenAPI spec
+- Always use tentative language ("may", "could", "potentially", "suggests")`;
 }
 
 /**
  * Build the user prompt for Phase B deep dive
  */
 export function buildDeepDiveUserPrompt(
+  specTitle: string,
+  specDescription: string | null,
   endpoint: EndpointDetail,
-  scenario: AttackScenario
+  vuln: PotentialVulnerability
 ): string {
   const parts = [
-    `# Target Endpoint`,
-    `**Method**: ${endpoint.method.toUpperCase()}`,
-    `**Path**: ${endpoint.path}`,
+    `# API Context`,
+    `**API Name**: ${specTitle}`,
   ];
+
+  if (specDescription) {
+    parts.push(`**API Description**: ${specDescription}`);
+  }
+
+  parts.push(`\n# Target Endpoint`);
+  parts.push(`**Method**: ${endpoint.method.toUpperCase()}`);
+  parts.push(`**Path**: ${endpoint.path}`);
 
   if (endpoint.summary) {
     parts.push(`**Summary**: ${endpoint.summary}`);
@@ -299,79 +351,20 @@ export function buildDeepDiveUserPrompt(
     parts.push(`\n## Authentication: No security requirement defined`);
   }
 
-  // Attack Scenario
-  parts.push(`\n# Attack Scenario to Expand`);
-  parts.push(`**Name**: ${scenario.name}`);
-  parts.push(`**Category**: ${scenario.category}`);
-  parts.push(`**Relevance Score**: ${scenario.relevanceScore}/100`);
+  // Potential Vulnerability
+  parts.push(`\n# Initial Assessment`);
+  parts.push(`**Vulnerability**: ${vuln.name}`);
+  parts.push(`**Categories**: ${vuln.categories.join(", ")}`);
+  parts.push(`**Relevance Score**: ${vuln.relevanceScore}/100`);
 
-  if (scenario.affectedParams.length > 0) {
-    parts.push(`**Affected Parameters**: ${scenario.affectedParams.join(", ")}`);
-  }
-
-  // Knowledge base content
-  const techniquesText = getTechniquesPromptText(scenario.category);
-  const payloadsText = getPayloadsPromptText(scenario.category);
-
-  if (techniquesText) {
-    parts.push(techniquesText);
-  }
-
-  if (payloadsText) {
-    parts.push(payloadsText);
+  if (vuln.affectedParams.length > 0) {
+    parts.push(`**Affected Parameters**: ${vuln.affectedParams.join(", ")}`);
   }
 
   parts.push(`\n---`);
   parts.push(
-    `\nGenerate a detailed testing plan for this scenario on this endpoint. Return ONLY a JSON object with the structure specified in the system prompt.`
+    `\nGenerate detailed testing guidance for this vulnerability on this endpoint. Return ONLY a JSON object with the structure specified in the system prompt.`
   );
-
-  return parts.join("\n");
-}
-
-/**
- * Build prompt for payload generation
- */
-export function buildPayloadGenerationPrompt(
-  endpoint: EndpointDetail,
-  scenario: AttackScenario,
-  existingPayloads: string[]
-): string {
-  const parts = [
-    `You are an API security testing advisor. Generate additional attack payloads for a specific scenario.`,
-    ``,
-    `# Target Endpoint`,
-    `**Method**: ${endpoint.method.toUpperCase()}`,
-    `**Path**: ${endpoint.path}`,
-    `**Content-Type**: ${endpoint.requestBody?.contentType || "application/json"}`,
-    ``,
-    `# Attack Scenario`,
-    `**Name**: ${scenario.name}`,
-    `**Category**: ${scenario.category}`,
-    ``,
-    `# Existing Payloads (Do Not Duplicate)`,
-    existingPayloads.map((p, i) => `${i + 1}. ${p}`).join("\n"),
-    ``,
-    `# Your Task`,
-    ``,
-    `Generate 5-10 additional payloads that:`,
-    `- Test different variations or edge cases of the attack pattern`,
-    `- Are specific to this endpoint's parameters and content type`,
-    `- Do not duplicate any payloads already listed above`,
-    `- Cover different injection points or parameter combinations`,
-    ``,
-    `Return ONLY a JSON object:`,
-    `{`,
-    `  "payloads": [`,
-    `    {`,
-    `      "label": "Short descriptive name",`,
-    `      "contentType": "application/json | application/x-www-form-urlencoded | text/plain",`,
-    `      "body": "The payload value or full request body",`,
-    `      "description": "What this payload tests for"`,
-    `    }`,
-    `  ]`,
-    `}`,
-  ];
 
   return parts.join("\n");
 }

@@ -3,10 +3,10 @@ import type { OWASPCategory } from "../types.js";
 export const API4: OWASPCategory = {
   id: "API4",
   name: "Unrestricted Resource Consumption",
-  shortName: "Unlimited Resources",
+  shortName: "Resource Consumption",
   description:
-    "APIs that do not limit the resources they consume are vulnerable to denial of service attacks. This includes unlimited request sizes, unbounded query results, lack of rate limiting, and expensive operations that can be abused to exhaust server resources.",
-  cwe: ["CWE-770", "CWE-400", "CWE-502"],
+    "Satisfying API requests requires resources such as network bandwidth, CPU, memory, and storage. Sometimes required resources are made available by service providers via API integrations, and paid for per request. Exploitation can lead to DoS due to resource starvation, but it can also lead to operational costs increase.",
+  cwe: ["CWE-770", "CWE-400", "CWE-799"],
   relevanceIndicators: [
     "GET endpoints accepting limit, count, or size parameters without apparent maximum values",
     "Endpoints accepting pagination parameters without enforced limits",

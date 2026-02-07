@@ -546,22 +546,22 @@
   height: 16px;
 }
 
-.scenario-count-label {
+.vulnerability-count-label {
   font-size: 12px;
   color: var(--text-secondary);
   font-weight: 400;
 }
 
-/* ─── Attack Scenario Rows ─── */
-.attack-scenario {
+/* ─── Vulnerability Rows ─── */
+.vulnerability-row {
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.attack-scenario:last-child {
+.vulnerability-row:last-child {
   border-bottom: none;
 }
 
-.attack-scenario-header {
+.vulnerability-row-header {
   width: 100%;
   display: flex;
   align-items: flex-start;
@@ -569,7 +569,7 @@
   padding: 12px 16px;
 }
 
-.scenario-number {
+.vulnerability-number {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
@@ -583,12 +583,12 @@
   border-radius: 6px;
 }
 
-.scenario-content {
+.vulnerability-content {
   flex: 1;
   min-width: 0;
 }
 
-.scenario-name {
+.vulnerability-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
@@ -596,7 +596,7 @@
   line-height: 1.4;
 }
 
-.scenario-category {
+.vulnerability-category {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
@@ -609,13 +609,13 @@
   letter-spacing: 0.03em;
 }
 
-.scenario-params {
+.vulnerability-params {
   margin-left: 8px;
   font-size: 12px;
   color: var(--text-secondary);
 }
 
-.scenario-params code {
+.vulnerability-params code {
   font-family: var(--font-mono);
   font-size: 11px;
   background: var(--bg-tertiary);
@@ -626,58 +626,58 @@
 }
 
 /* Category-specific badge colors */
-.scenario-category[aria*="API1"] {
+.vulnerability-category[aria*="API1"] {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
   color: #dc2626;
 }
 
-.scenario-category[aria*="API2"] {
+.vulnerability-category[aria*="API2"] {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08));
   color: #d97706;
 }
 
-.scenario-category[aria*="API3"] {
+.vulnerability-category[aria*="API3"] {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
   color: #dc2626;
 }
 
-.scenario-category[aria*="API4"] {
+.vulnerability-category[aria*="API4"] {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(147, 51, 234, 0.08));
   color: #a855f7;
 }
 
-.scenario-category[aria*="API5"] {
+.vulnerability-category[aria*="API5"] {
   background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(202, 138, 4, 0.08));
   color: #ca8a04;
 }
 
-.scenario-category[aria*="API6"] {
+.vulnerability-category[aria*="API6"] {
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(13, 148, 136, 0.08));
   color: #0d9488;
 }
 
-.scenario-category[aria*="API7"] {
+.vulnerability-category[aria*="API7"] {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.08));
   color: #2563eb;
 }
 
-.scenario-category[aria*="API8"] {
+.vulnerability-category[aria*="API8"] {
   background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(234, 88, 12, 0.08));
   color: #ea580c;
 }
 
-.scenario-category[aria*="API9"] {
+.vulnerability-category[aria*="API9"] {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(124, 58, 237, 0.08));
   color: #7c3aed;
 }
 
-.scenario-category[aria*="API10"] {
+.vulnerability-category[aria*="API10"] {
   background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(219, 39, 119, 0.08));
   color: #db2777;
 }
 
-/* ─── Scenario Expand Button ─── */
-.scenario-expand-btn {
+/* ─── Vulnerability Expand Button ─── */
+.vulnerability-expand-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -693,25 +693,49 @@
   transition: color var(--transition-fast) ease;
 }
 
-.scenario-expand-btn:hover {
+.vulnerability-expand-btn:hover {
   color: var(--brand-hover);
 }
 
-.scenario-expand-btn:focus-visible {
+.vulnerability-expand-btn:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
   border-radius: 3px;
 }
 
-.scenario-expand-btn:disabled {
+.vulnerability-expand-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* ─── Expanded Deep Dive ─── */
-.scenario-deep-dive {
+.vulnerability-deep-dive {
   padding: 0 16px 16px 48px;
   animation: slideDown 0.2s ease;
+}
+
+/* ─── Vulnerability Tests (natural language) ─── */
+.vulnerability-tests {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.vulnerability-tests li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 4px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.vulnerability-tests li::before {
+  content: "•";
+  position: absolute;
+  left: 6px;
+  color: var(--brand-default);
+  font-weight: 700;
 }
 
 @keyframes slideDown {
@@ -818,46 +842,113 @@
   pointer-events: none;
 }
 
-.generate-payload-btn {
+/* ─── Testing Tools ─── */
+.tools-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--brand-default);
-  background: var(--brand-bg);
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  padding: 4px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: all var(--transition-fast) ease;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
 }
 
-.generate-payload-btn:hover {
-  background: var(--brand-bg-hover);
-  border-color: rgba(167, 139, 250, 0.35);
+/* ─── Test Scenarios ─── */
+.scenario-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 10px;
 }
 
-.generate-payload-btn:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
+.scenario-card:first-child {
+  margin-top: 0;
 }
 
-.generate-payload-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.scenario-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
-/* ─── Add Scenario Row ─── */
-.add-scenario-row {
+.scenario-section {
+  margin-bottom: 10px;
+}
+
+.scenario-section:last-child {
+  margin-bottom: 0;
+}
+
+.scenario-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+
+.scenario-content {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.scenario-code {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.scenario-code code {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.malicious-payload {
+  border-color: var(--warning-subtle);
+  background: rgba(255, 87, 34, 0.04);
+}
+
+.malicious-payload::before {
+  content: "⚠️";
+  display: block;
+  font-size: 11px;
+  color: var(--warning);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* ─── Add Vulnerability Row ─── */
+.add-vulnerability-row {
   padding: 8px 16px 12px;
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-secondary);
 }
 
-.add-scenario-btn {
+.add-vulnerability-btn {
   width: 100%;
   display: flex;
   align-items: center;
@@ -874,11 +965,11 @@
   transition: all var(--transition-fast) ease;
 }
 
-.add-scenario-btn:disabled {
+.add-vulnerability-btn:disabled {
   opacity: 0.6;
 }
 
-.add-scenario-btn svg {
+.add-vulnerability-btn svg {
   flex-shrink: 0;
 }
 

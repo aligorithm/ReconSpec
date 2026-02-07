@@ -1,12 +1,12 @@
 import type { OWASPCategory } from "../types.js";
 
-export const API8_Misconfiguration: OWASPCategory = {
+export const API8: OWASPCategory = {
   id: "API8",
   name: "Security Misconfiguration",
   shortName: "Misconfiguration",
   description:
-    "Security misconfiguration is one of the most common vulnerabilities. It occurs when APIs have improper security settings, default configurations, overly verbose error messages, or missing security headers.",
-  cwe: ["CWE-16", "CWE-215", "CWE-927"],
+    "Attackers will often attempt to find unpatched flaws, common endpoints, services running with insecure default configurations, or unprotected files and directories to gain unauthorized access. Security misconfigurations not only expose sensitive user data, but also system details that can lead to full server compromise.",
+  cwe: ["CWE-2", "CWE-16", "CWE-209", "CWE-319", "CWE-388", "CWE-444", "CWE-942"],
   relevanceIndicators: [
     "String fields with no format, pattern, or enum constraints suggesting possible injection",
     "Endpoints with no authentication requirement defined in the spec",

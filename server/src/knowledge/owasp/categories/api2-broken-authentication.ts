@@ -5,8 +5,8 @@ export const API2: OWASPCategory = {
   name: "Broken Authentication",
   shortName: "Broken Auth",
   description:
-    "Authentication is the process of verifying the identity of a user or service. Broken authentication allows attackers to bypass authentication, impersonate legitimate users, or take over accounts.",
-  cwe: ["CWE-287", "CWE-307", "CWE-602"],
+    "The authentication mechanism is an easy target for attackers since it's exposed to everyone. Although more advanced technical skills may be required to exploit some authentication issues, exploitation tools are generally available. Attackers can gain complete control of other users' accounts in the system, read their personal data, and perform sensitive actions on their behalf.",
+  cwe: ["CWE-204", "CWE-307"],
   relevanceIndicators: [
     "Endpoints with paths containing login, auth, token, register, password, signin, signup",
     "Request bodies with password, credential, currentPassword, newPassword fields",

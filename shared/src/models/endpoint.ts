@@ -33,34 +33,34 @@ export interface SecurityRequirement {
  * Security assessment for an endpoint (populated in Phase 3)
  */
 export interface SecurityAssessment {
-  scenarios: AttackScenario[];
+  vulnerabilities: PotentialVulnerability[];
   analyzedAt: string;
 }
 
-export interface AttackScenario {
+export interface PotentialVulnerability {
   id: string;
   name: string;
-  category: string;
+  categories: string[];
   relevanceScore: number;
   affectedParams: string[];
   deepDive: DeepDiveResult | null;
 }
 
+/**
+ * Test scenario with context and examples
+ */
+export interface TestScenario {
+  context: string;           // Business context description
+  legitimateRequest: string; // Example legitimate request
+  maliciousPayload: string;  // Example malicious payload
+  explanation: string;       // Why this demonstrates the vulnerability
+}
+
 export interface DeepDiveResult {
   overview: string;
-  steps: DeepDiveStep[];
-  expectedResponses: ExpectedResponse[];
-  samplePayloads: PayloadExample[];
-}
-
-export interface DeepDiveStep {
-  description: string;
-  parameterFocus: string[];
-}
-
-export interface ExpectedResponse {
-  condition: string;
-  indicators: string[];
+  testScenarios: TestScenario[];  // Changed from 'tests: string[]'
+  tools: string[];                // NEW: Suggested testing tools
+  samplePayload: PayloadExample | null;
 }
 
 export interface PayloadExample {

@@ -5,8 +5,8 @@ export const API10: OWASPCategory = {
   name: "Unsafe Consumption of APIs",
   shortName: "Unsafe Consumption",
   description:
-    "Developers often trust third-party APIs or services more than their own. This vulnerability occurs when APIs integrate with external services without proper validation, rate limiting, or security controls, allowing attackers to exploit the trust relationship.",
-  cwe: ["CWE-939", "CWE-345"],
+    "Developers tend to trust data received from third-party APIs more than user input. Because of that, developers tend to adopt weaker security standards, for instance, in regards to input validation and sanitization. Successful exploitation may lead to sensitive information exposure to unauthorized actors, many kinds of injections, or denial of service.",
+  cwe: ["CWE-20", "CWE-200", "CWE-319"],
   relevanceIndicators: [
     "Endpoints that forward or proxy data to third-party APIs",
     "Integration endpoints with external services (payment, auth, analytics)",

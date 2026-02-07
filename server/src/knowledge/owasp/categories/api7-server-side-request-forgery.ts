@@ -1,12 +1,12 @@
 import type { OWASPCategory } from "../types.js";
 
-export const API7_SSRF: OWASPCategory = {
+export const API7: OWASPCategory = {
   id: "API7",
   name: "Server-Side Request Forgery (SSRF)",
   shortName: "SSRF",
   description:
-    "SSRF vulnerabilities occur when an API fetches a remote resource without validating the user-supplied URL. This allows attackers to force the server to make requests to internal services, cloud metadata endpoints, or other unintended destinations.",
-  cwe: ["CWE-918", "CWE-441"],
+    "Server-Side Request Forgery (SSRF) flaws occur when an API is fetching a remote resource without validating the user-supplied URL. It enables an attacker to coerce the application to send a crafted request to an unexpected destination, even when protected by a firewall or a VPN. Modern concepts in application development make SSRF more common and more dangerous.",
+  cwe: ["CWE-918"],
   relevanceIndicators: [
     "Request body or query parameters with names like url, link, href, endpoint, callback, webhook, redirect, target, host",
     "Fields with names suggesting URLs: photoUrl, avatarUrl, callbackUrl, webhookUrl, returnUrl, redirectUri",

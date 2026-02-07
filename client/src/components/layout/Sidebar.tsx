@@ -29,7 +29,7 @@ export function Sidebar(): JSX.Element | null {
               {group.name}
             </div>
             {group.endpoints.map((endpoint) => {
-              const scenarioCount = endpoint.assessment?.scenarios.length ?? 0;
+              const vulnCount = endpoint.assessment?.vulnerabilities.length ?? 0;
 
               return (
                 <a
@@ -48,8 +48,8 @@ export function Sidebar(): JSX.Element | null {
                 >
                   <MethodBadge method={endpoint.method} variant="mini" />
                   <span className="path">{endpoint.path}</span>
-                  {scenarioCount > 0 && (
-                    <span className="sidebar-count">{scenarioCount}</span>
+                  {vulnCount > 0 && (
+                    <span className="sidebar-count">{vulnCount}</span>
                   )}
                 </a>
               );

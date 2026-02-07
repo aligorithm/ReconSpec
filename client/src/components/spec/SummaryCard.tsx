@@ -13,9 +13,9 @@ export function SummaryCard(): JSX.Element | null {
 
   const totalAuthSchemes = parsedSpec.auth.length;
 
-  // Calculate total scenarios from analyzed endpoints
-  const totalScenarios = parsedSpec.tagGroups.reduce(
-    (sum, group) => sum + group.endpoints.reduce((epSum, ep) => epSum + (ep.assessment?.scenarios.length || 0), 0),
+  // Calculate total vulnerabilities from analyzed endpoints
+  const totalVulns = parsedSpec.tagGroups.reduce(
+    (sum, group) => sum + group.endpoints.reduce((epSum, ep) => epSum + (ep.assessment?.vulnerabilities.length || 0), 0),
     0
   );
 
@@ -34,8 +34,8 @@ export function SummaryCard(): JSX.Element | null {
           {hasAnalysis ? (
             <>
               <div className="stat">
-                <div className="stat-value">{totalScenarios}</div>
-                <div className="stat-label">Scenarios</div>
+                <div className="stat-value">{totalVulns}</div>
+                <div className="stat-label">Test Areas</div>
               </div>
               <div className="stat">
                 <div className="stat-value">{totalEndpoints}</div>
@@ -127,10 +127,10 @@ export function SummaryCard(): JSX.Element | null {
         )}
       </div>
 
-      {/* Risk tags section */}
-      <div className="risk-tags" aria-label="Security analysis">
-        {hasAnalysis && apiSummary && apiSummary.riskCategories.length > 0 ? (
-          apiSummary.riskCategories.map((cat) => (
+      {/* Testing categories section */}
+      <div className="risk-tags" aria-label="Testing strategy">
+        {hasAnalysis && apiSummary && apiSummary.testingCategories.length > 0 ? (
+          apiSummary.testingCategories.map((cat) => (
             <span key={cat.categoryId} className="risk-tag">
               {cat.categoryId} — {cat.categoryName}{" "}
               <span className="tag-count">{cat.count}</span>
@@ -145,8 +145,8 @@ export function SummaryCard(): JSX.Element | null {
             }}
           >
             {hasAnalysis
-              ? "No attack scenarios identified"
-              : "Run analysis to identify attack scenarios"}
+              ? "No specific testing areas identified"
+              : "Run analysis to identify testing priorities"}
           </span>
         )}
       </div>

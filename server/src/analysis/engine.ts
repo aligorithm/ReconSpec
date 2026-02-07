@@ -4,19 +4,17 @@
  * Orchestrates the analysis of endpoints against the OWASP Top 10.
  */
 
-import type { ParsedSpec, EndpointDetail, SecurityAssessment, AttackScenario } from "@reconspec/shared";
+import type { ParsedSpec, EndpointDetail, SecurityAssessment } from "@reconspec/shared";
 import type { LLMGateway } from "../llm/gateway.js";
 import type { LLMMessage } from "@reconspec/shared";
-import { buildSystemPrompt, buildUserPrompt, buildSummaryPrompt, buildDeepDiveSystemPrompt, buildDeepDiveUserPrompt, buildPayloadGenerationPrompt } from "./promptBuilder.js";
+import { buildSystemPrompt, buildUserPrompt, buildSummaryPrompt, buildDeepDiveSystemPrompt, buildDeepDiveUserPrompt } from "./promptBuilder.js";
 import {
   parsePhaseAResponse,
   parseAPISummaryResponse,
-  toAttackScenario,
+  toPotentialVulnerability,
   parseDeepDiveResponse,
-  parsePayloadGenerationResponse,
   type APISummaryResponse,
   type DeepDiveResponse,
-  type PayloadExample,
 } from "./responseParser.js";
 
 /**
@@ -77,21 +75,21 @@ async function analyzeEndpoint(
       };
     }
 
-    // Sort scenarios by relevance score descending
-    const sortedScenarios = parsed.data.scenarios.sort(
+    // Sort vulnerabilities by relevance score descending
+    const sortedVulns = parsed.data.vulnerabilities.sort(
       (a, b) => b.relevanceScore - a.relevanceScore
     );
 
-    // Convert to AttackScenario format
-    const attackScenarios = sortedScenarios.map((scenario, index) =>
-      toAttackScenario(scenario, index)
+    // Convert to PotentialVulnerability format
+    const vulnerabilities = sortedVulns.map((vuln, index) =>
+      toPotentialVulnerability(vuln, index)
     );
 
     return {
       endpointId: endpoint.id,
       success: true,
       assessment: {
-        scenarios: attackScenarios,
+        vulnerabilities: vulnerabilities,
         analyzedAt: new Date().toISOString(),
       },
     };
@@ -122,14 +120,14 @@ async function generateAPISummary(
     .map(({ endpoint, result }) => ({
       method: endpoint.method,
       path: endpoint.path,
-      scenarios: result.assessment!.scenarios.map((s) => ({
-        name: s.name,
-        categoryId: s.category,
+      vulnerabilities: result.assessment!.vulnerabilities.map((v) => ({
+        name: v.name,
+        categories: v.categories,
       })),
     }));
 
-  const totalScenarios = endpointSummaries.reduce(
-    (sum, ep) => sum + ep.scenarios.length,
+  const totalVulnerabilities = endpointSummaries.reduce(
+    (sum, ep) => sum + ep.vulnerabilities.length,
     0
   );
 
@@ -137,7 +135,7 @@ async function generateAPISummary(
     spec.title,
     spec.description,
     endpointSummaries,
-    totalScenarios,
+    totalVulnerabilities,
     spec.tagGroups.flatMap((g) => g.endpoints).length
   );
 
@@ -232,9 +230,9 @@ export async function analyzeSpec(
     results.push(...batchResults.map((r) => r.result));
   }
 
-  // Calculate total scenarios
-  const totalScenarios = results.reduce(
-    (sum, r) => sum + (r.assessment?.scenarios.length || 0),
+  // Calculate total vulnerabilities
+  const totalVulnerabilities = results.reduce(
+    (sum, r) => sum + (r.assessment?.vulnerabilities.length || 0),
     0
   );
 
@@ -257,7 +255,7 @@ export async function analyzeSpec(
   onProgress({
     type: "complete",
     data: {
-      totalScenarios,
+      totalScenarios: totalVulnerabilities,
       totalEndpoints: total,
     },
   });
@@ -265,7 +263,7 @@ export async function analyzeSpec(
   return {
     results,
     apiSummary,
-    totalScenarios,
+    totalScenarios: totalVulnerabilities,
     failedEndpoints,
   };
 }
@@ -282,13 +280,13 @@ function findEndpointById(spec: ParsedSpec, endpointId: string): EndpointDetail 
 }
 
 /**
- * Generate a deep dive for a specific attack scenario
+ * Generate a deep dive for a specific vulnerability
  */
 export async function generateDeepDive(
   gateway: LLMGateway,
   spec: ParsedSpec,
   endpointId: string,
-  scenarioId: string
+  vulnId: string
 ): Promise<{ success: boolean; data?: DeepDiveResponse; error?: string }> {
   // Find the endpoint
   const endpoint = findEndpointById(spec, endpointId);
@@ -296,15 +294,15 @@ export async function generateDeepDive(
     return { success: false, error: "Endpoint not found" };
   }
 
-  // Find the scenario
-  const scenario = endpoint.assessment?.scenarios.find((s) => s.id === scenarioId);
-  if (!scenario) {
-    return { success: false, error: "Scenario not found" };
+  // Find the vulnerability
+  const vuln = endpoint.assessment?.vulnerabilities.find((v) => v.id === vulnId);
+  if (!vuln) {
+    return { success: false, error: "Vulnerability not found" };
   }
 
   const messages: LLMMessage[] = [
-    { role: "system", content: buildDeepDiveSystemPrompt() },
-    { role: "user", content: buildDeepDiveUserPrompt(endpoint, scenario) },
+    { role: "system", content: buildDeepDiveSystemPrompt(vuln.categories) },
+    { role: "user", content: buildDeepDiveUserPrompt(spec.title, spec.description, endpoint, vuln) },
   ];
 
   try {
@@ -340,66 +338,6 @@ export async function generateDeepDive(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to generate deep dive",
-    };
-  }
-}
-
-/**
- * Generate additional payloads for a scenario
- */
-export async function generateAdditionalPayloads(
-  gateway: LLMGateway,
-  spec: ParsedSpec,
-  endpointId: string,
-  scenarioId: string,
-  existingPayloads: string[]
-): Promise<{ success: boolean; data?: PayloadExample[]; error?: string }> {
-  // Find the endpoint
-  const endpoint = findEndpointById(spec, endpointId);
-  if (!endpoint) {
-    return { success: false, error: "Endpoint not found" };
-  }
-
-  // Find the scenario
-  const scenario = endpoint.assessment?.scenarios.find((s) => s.id === scenarioId);
-  if (!scenario) {
-    return { success: false, error: "Scenario not found" };
-  }
-
-  const messages: LLMMessage[] = [
-    {
-      role: "system",
-      content:
-        "You are an API security testing advisor. Generate additional attack payloads and return ONLY a JSON response.",
-    },
-    {
-      role: "user",
-      content: buildPayloadGenerationPrompt(endpoint, scenario, existingPayloads),
-    },
-  ];
-
-  try {
-    const response = await gateway.chat({
-      messages,
-      temperature: 0.5,
-      maxTokens: 2500,
-      responseFormat: "json",
-    });
-
-    const parsed = parsePayloadGenerationResponse(response.content);
-
-    if (!parsed.success || !parsed.data) {
-      return {
-        success: false,
-        error: parsed.error || "Failed to parse response",
-      };
-    }
-
-    return { success: true, data: parsed.data };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to generate payloads",
     };
   }
 }

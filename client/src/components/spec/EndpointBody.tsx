@@ -8,7 +8,7 @@ interface EndpointBodyProps {
 }
 
 export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
-  const { deepDiveScenario } = useSpec();
+  const { deepDiveVuln } = useSpec();
   const hasParameters = endpoint.parameters.length > 0;
   const hasRequestBody = endpoint.requestBody !== null;
 
@@ -103,7 +103,7 @@ export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
         <SecurityAssessmentPanel
           endpoint={endpoint}
           assessment={endpoint.assessment}
-          onDeepDive={deepDiveScenario}
+          onDeepDive={deepDiveVuln}
         />
       ) : (
         <div
@@ -124,7 +124,7 @@ export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
               </svg>
               Security Assessment
             </div>
-            <span className="scenario-count-label">Not analyzed</span>
+            <span className="vulnerability-count-label">Not analyzed</span>
           </div>
           <div
             style={{
@@ -135,7 +135,7 @@ export function EndpointBody({ endpoint }: EndpointBodyProps): JSX.Element {
               fontStyle: "italic",
             }}
           >
-            Run analysis to generate attack scenarios.
+            Run analysis to identify potential vulnerabilities.
           </div>
         </div>
       )}

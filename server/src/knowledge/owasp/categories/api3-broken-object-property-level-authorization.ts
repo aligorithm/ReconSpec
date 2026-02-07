@@ -3,10 +3,10 @@ import type { OWASPCategory } from "../types.js";
 export const API3: OWASPCategory = {
   id: "API3",
   name: "Broken Object Property Level Authorization",
-  shortName: "Object Property Auth",
+  shortName: "Property Auth",
   description:
-    "This vulnerability allows attackers to access or modify properties of objects they should not have access to. This often occurs when APIs automatically trust client-provided data without verifying which properties are allowed for the current user's role or permission level.",
-  cwe: ["CWE-642", "CWE-862"],
+    "APIs tend to expose endpoints that return all object's properties. This is particularly valid for REST APIs. For other protocols such as GraphQL, it may require crafted requests to specify which properties should be returned. Unauthorized access to private/sensitive object properties may result in data disclosure, data loss, or data corruption.",
+  cwe: ["CWE-213", "CWE-915"],
   relevanceIndicators: [
     "PUT/PATCH request bodies with fields like role, status, isAdmin, permissions, admin, type",
     "Request body schemas that include properties which appear in the response but seem administrative or sensitive",

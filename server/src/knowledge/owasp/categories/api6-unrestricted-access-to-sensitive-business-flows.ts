@@ -5,8 +5,8 @@ export const API6: OWASPCategory = {
   name: "Unrestricted Access to Sensitive Business Flows",
   shortName: "Business Flows",
   description:
-    "APIs often expose business flows that should be protected against automated abuse. This includes workflows like password recovery, account creation, payment processing, and purchasing that can be exploited by automating the process.",
-  cwe: ["CWE-840", "CWE-502"],
+    "Exploitation usually involves understanding the business model backed by the API, finding sensitive business flows, and automating access to these flows, causing harm to the business. An API Endpoint is vulnerable if it exposes a sensitive business flow, without appropriately restricting the access to it.",
+  cwe: [],
   relevanceIndicators: [
     "Endpoints involved in purchase or checkout flows",
     "Password reset or account recovery workflows",

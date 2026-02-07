@@ -6,16 +6,16 @@
  */
 
 import type { OWASPCategory } from "./types.js";
-import { API1 } from "./categories/api1-bola.js";
-import { API2 } from "./categories/api2-broken-auth.js";
-import { API3 } from "./categories/api3-object-property.js";
-import { API4 } from "./categories/api4-unrestricted-resource.js";
-import { API5 } from "./categories/api5-broken-function-auth.js";
-import { API6 } from "./categories/api6-server-side-request-forgery.js";
-import { API7_SSRF } from "./categories/api7-ssrf.js";
-import { API8_Misconfiguration } from "./categories/api8-lack-of-protection.js";
-import { API9 } from "./categories/api9-improper-inventory.js";
-import { API10 } from "./categories/api10-unsafe-api-consumption.js";
+import { API1 } from "./categories/api1-broken-object-level-authorization.js";
+import { API2 } from "./categories/api2-broken-authentication.js";
+import { API3 } from "./categories/api3-broken-object-property-level-authorization.js";
+import { API4 } from "./categories/api4-unrestricted-resource-consumption.js";
+import { API5 } from "./categories/api5-broken-function-level-authorization.js";
+import { API6 } from "./categories/api6-unrestricted-access-to-sensitive-business-flows.js";
+import { API7 } from "./categories/api7-server-side-request-forgery.js";
+import { API8 } from "./categories/api8-security-misconfiguration.js";
+import { API9 } from "./categories/api9-improper-inventory-management.js";
+import { API10 } from "./categories/api10-unsafe-consumption-of-apis.js";
 
 /**
  * All OWASP API Top 10 categories
@@ -27,8 +27,8 @@ export const OWASP_CATEGORIES: OWASPCategory[] = [
   API4, // Unrestricted Resource Consumption
   API5, // Broken Function Level Authorization
   API6, // Unrestricted Access to Sensitive Business Flows
-  API7_SSRF, // Server Side Request Forgery
-  API8_Misconfiguration, // Security Misconfiguration
+  API7, // Server Side Request Forgery
+  API8, // Security Misconfiguration
   API9, // Improper Inventory Management
   API10, // Unsafe Consumption of APIs
 ];
